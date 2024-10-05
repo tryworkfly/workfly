@@ -1,4 +1,4 @@
-from typing import NotRequired, TypedDict
+from typing import Iterator, NotRequired, TypedDict
 
 from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
 
@@ -38,8 +38,8 @@ class WorkflowYAML(TypedDict):
 class WorkflowToYAML:
     @staticmethod
     def to_yaml(workflow: WorkflowRequest) -> WorkflowYAML:
-        triggers = WorkflowToYAML.triggers_to_yaml(workflow.trigger)
-        jobs = WorkflowToYAML.jobs_to_yaml(workflow.jobs)
+        triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
+        jobs = WorkflowToYAML._jobs_to_yaml(iter(workflow.jobs), workflow.job_edges)
         return {
             "name": workflow.name,
             "run-name": workflow.runName,
@@ -49,23 +49,40 @@ class WorkflowToYAML:
         }
 
     @staticmethod
-    def triggers_to_yaml(triggers: list[TriggerRequest]) -> dict[str, dict]:
+    def _triggers_to_yaml(triggers: list[TriggerRequest]) -> dict[str, dict]:
         return {trigger.event: trigger.config for trigger in triggers}
 
     @staticmethod
-    def jobs_to_yaml(jobs: list[JobRequest]) -> dict[str, JobYAML]:
+    def _make_job_id(job_name: str) -> str:
+        return job_name.lower().replace(" ", "-")
+
+    @staticmethod
+    def _jobs_to_yaml(
+        jobs: Iterator[JobRequest], job_edges: list[tuple[str, str]]
+    ) -> dict[str, JobYAML]:
+        job = next(jobs, None)
+        if not job:
+            return {}
+
+        dependent_jobs: list[str] = []
+        for source, target in job_edges:
+            if target == job.name:
+                dependent_jobs.append(WorkflowToYAML._make_job_id(source))
+
+        job_id = WorkflowToYAML._make_job_id(job.name)
         return {
-            job.name.lower().replace(" ", "-"): {
+            **WorkflowToYAML._jobs_to_yaml(jobs, job_edges),
+            job_id: {
                 "name": job.name,
                 "runs-on": ["linux"],
-                "needs": [],
-                "steps": WorkflowToYAML.steps_to_yaml(job.steps),
-            }
-            for job in jobs
+                "needs": dependent_jobs,
+                "steps": WorkflowToYAML._steps_to_yaml(job.steps),
+            },
         }
 
     @staticmethod
-    def steps_to_yaml(steps: list[StepRequest]) -> list[StepActionYAML | StepRunYAML]:
+    def _steps_to_yaml(steps: list[StepRequest]) -> list[StepActionYAML | StepRunYAML]:
+        # validate step based on "uses"
         return [
             {
                 "name": step.name,

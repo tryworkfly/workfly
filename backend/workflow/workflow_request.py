@@ -14,7 +14,6 @@ class StepRequest(BaseModel):
 
 
 class JobRequest(BaseModel):
-    id: str
     name: str
     steps: list[StepRequest]
 
