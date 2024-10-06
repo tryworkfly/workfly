@@ -117,6 +117,40 @@ function Playground() {
       .then((data) => console.log(data));
   }
 
+  const onGenerate = useCallback(async (prompt: string) => {
+    if (prompt === "") return;
+    fetch("http://localhost:8000/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt: prompt }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data.response);
+        setNodes((nds) => {
+          const triggerNode = getNode("trigger");
+          if (triggerNode === undefined) return nds;
+          const newNodes = possibleActions
+            .filter((action) => data.response.includes(action.name))
+            .map((action, i) => {
+              return {
+                id: Math.random().toString(),
+                type: "actionNode",
+                position: {
+                  x: (i + 1) * 200 + triggerNode?.position.x,
+                  y: triggerNode?.position.y,
+                },
+                data: structuredClone(action),
+              };
+            });
+
+          return [triggerNode, ...newNodes];
+        });
+      });
+  }, []);
+
    const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
       if (node.type === "jobNode")
          return;
@@ -164,7 +198,7 @@ function Playground() {
         e.preventDefault();
       }}
     >
-      <Sidebar defaults={possibleActions} handleDrop={addAction} handleSubmit={onSubmit}/>
+      <Sidebar defaults={possibleActions} handleDrop={addAction} handleGenerate={onGenerate} handleSubmit={onSubmit}/>
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
