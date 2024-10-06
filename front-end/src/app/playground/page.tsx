@@ -32,7 +32,7 @@ const initialNodes: Node[] = [
     id: "trigger",
     type: "triggerNode",
     position: { x: 500, y: 300 },
-    data: { label: "onPush" },
+    data: { label: "On Push" },
     deletable: false,
   },
 ];
