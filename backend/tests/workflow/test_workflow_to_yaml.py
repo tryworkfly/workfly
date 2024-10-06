@@ -58,7 +58,7 @@ class TestWorkflowToYAML:
             jobs={
                 "test-job-request": {
                     "name": "Test Job Request",
-                    "runs-on": ["linux"],
+                    "runs-on": ["ubuntu-latest"],
                     "needs": [],
                     "steps": [{"name": "Test Step", "uses": "test_uses@v0.0.1"}],
                 }
@@ -105,7 +105,7 @@ class TestWorkflowToYAML:
             jobs={
                 "test-job-request": {
                     "name": "Test Job Request",
-                    "runs-on": ["linux"],
+                    "runs-on": ["ubuntu-latest"],
                     "needs": [],
                     "steps": [
                         {
@@ -116,7 +116,7 @@ class TestWorkflowToYAML:
                 },
                 "test-job-request-2": {
                     "name": "Test Job Request 2",
-                    "runs-on": ["linux"],
+                    "runs-on": ["ubuntu-latest"],
                     "needs": ["test-job-request"],
                     "steps": [
                         {
@@ -171,7 +171,7 @@ class TestWorkflowToYAML:
             jobs={
                 "build-and-deploy": {
                     "name": "Build and Deploy",
-                    "runs-on": ["linux"],
+                    "runs-on": ["ubuntu-latest"],
                     "needs": [],
                     "steps": [
                         {

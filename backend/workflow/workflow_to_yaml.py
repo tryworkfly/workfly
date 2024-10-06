@@ -115,7 +115,7 @@ class WorkflowToYAML:
                 **jobs_yaml,
                 job_id: {
                     "name": job.name,
-                    "runs-on": ["linux"],
+                    "runs-on": ["ubuntu-latest"],
                     "needs": dependent_jobs,
                     "steps": steps_yaml,
                 },
