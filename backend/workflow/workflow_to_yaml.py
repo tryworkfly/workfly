@@ -4,7 +4,6 @@ import yaml
 from db.step import StepClient
 from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
 
-
 StepActionYAML = TypedDict(
     "StepActionYAML",
     {
@@ -84,25 +83,30 @@ class WorkflowToYAML:
         }
 
     @staticmethod
-    def _steps_to_yaml(step_requests: list[StepRequest]) -> list[StepActionYAML]:
+    def _validate_step_request(step_request: StepRequest):
         step_db = StepClient()
+        step = step_db.get(step_request.id)
+
+        if step_request.id is not None:
+            if not step:
+                raise ValueError(f"Step {step_request.id} not found")
+            for input in step.inputs:
+                if input.required and (
+                    not step_request.inputs or input.name not in step_request.inputs
+                ):
+                    raise ValueError(f"Input {input.name} not found")
+        return step
+
+    @staticmethod
+    def _steps_to_yaml(step_requests: list[StepRequest]) -> list[StepActionYAML]:
         steps_yaml = []
         for step_request in step_requests:
-            # Validate step id and inputs
-            if step_request.id is not None:
-                step = step_db.get(step_request.id)
-                if not step:
-                    raise ValueError(f"Step {step_request.id} not found")
-                for input in step.inputs:
-                    if input.required and (
-                        not step_request.inputs or input.name not in step_request.inputs
-                    ):
-                        raise ValueError(f"Input {input.name} not found")
+            step = WorkflowToYAML._validate_step_request(step_request)
 
             step_yaml = {
                 "name": step_request.name,
                 "uses": f"{step_request.id}@{step.version}"
-                if step_request.id
+                if step_request.id and step
                 else None,
                 "with": step_request.inputs,
                 "run": step_request.run,

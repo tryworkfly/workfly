@@ -65,7 +65,7 @@ class StepClient:
         pass
 
     def get_all(self):
-        return _steps.values()
+        return list(_steps.values())
 
     def get(self, id: str) -> Step | None:
         return _steps.get(id)
