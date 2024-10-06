@@ -76,3 +76,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.react-flow__handle {
+  width: 10px !important;
+  height: 10px !important;
+}

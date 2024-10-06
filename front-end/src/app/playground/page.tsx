@@ -15,194 +15,97 @@ import {
   OnNodeDrag,
   OnConnect,
   Connection,
-
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import { ActionCardNode } from "@/components/ActionCard";
-import { JobCardNode } from "@/components/JobCard";
-import nodeTypes from "@/components/NodeTypes";
-import Sidebar from "@/components/sidebar";
+import useSWR from "swr";
+import fetcher from "@/lib/fetcher";
+import type { ActionNode } from "@/components/nodes/ActionNode";
+import type { JobNode } from "@/components/nodes/JobNode";
+import nodeTypes from "./nodeTypes";
+import Sidebar from "@/components/Sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import TopPanel from "@/components/TopPanel";
 
 const initialNodes: Node[] = [
-   {
-      id: "trigger",
-      type: "triggerNode",
-      position: { x: 500, y: 300 },
-      data: { label: "onPush" },
-      deletable: false,
-   }
+  {
+    id: "trigger",
+    type: "triggerNode",
+    position: { x: 500, y: 300 },
+    data: { label: "On Push" },
+    deletable: false,
+  },
 ];
 
 const initialEdges: Edge[] = [];
 
 export default function App() {
-   return (
-         <ReactFlowProvider>
-            <Playground />
-         </ReactFlowProvider>
-   )
+  return (
+    <TooltipProvider delayDuration={0}>
+      <ReactFlowProvider>
+        <Playground />
+      </ReactFlowProvider>
+    </TooltipProvider>
+  );
 }
 
 function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const [possibleActions, setPossibleActions] = useState<Step[]>([]);
-  // const { getInterSectionNodes}
-  const { getIntersectingNodes, getZoom, getNodes, getEdges, getNode } = useReactFlow();
-   useEffect(() => {
-     fetch("http://localhost:8000/steps")
-       .then((res) => res.json())
-       .then((data) => setPossibleActions(data));
-   }, []);
+  const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
+  const { getIntersectingNodes } = useReactFlow();
 
   const onConnect: OnConnect = useCallback(
-    (params: Connection) =>
-      setEdges((eds) =>
-        addEdge(params, eds)
-      ),
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
-  const onSubmit = async () => {
-    const nodes = getNodes();
-    const edges = getEdges();
-    let graph = new Map();
-    for (const e of edges) {
-      graph.set(e.target, e.source);
-    }
-
-    if (graph.size === 0)
-      return;
-
-    let wfRequest: WorkflowRequest = {
-      name: "New workflow",
-      runName: "New workflow Runname",
-      trigger: [{
-        event: "push",
-        config: {}
-      }],
-      jobs: [{
-        name: "Main Job",
-        steps: []
-      }],
-      jobEdges: []
-    };
-
-    let currNodeId = graph.get("trigger");
-    while (true) {
-      const node = getNode(currNodeId);
-      if (node === undefined)
-        return;
-      let data = node.data as Step;
-      if (data.inputs.some((v) => v.required && v.value === undefined)) return;
-      wfRequest.jobs[0].steps.push({
-        name: data.name,
-        id: data.id,
-        inputs: data.inputs.reduce((obj, s) => ({...obj, [s.name]: s.value}), {})
-      });
-      if (!graph.has(currNodeId))
-          break;
-      currNodeId = graph.get(currNodeId);
-    }
-    fetch("http://localhost:8000/workflows", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(wfRequest),
-    })
-      .then((res) => res.json())
-      .then((data) => console.log(data));
-  }
-
-  const onGenerate = async (prompt: string) => {
-    if (prompt === "") return;
-    fetch("http://localhost:8000/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: prompt }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data.response);
-        let newEdges: Edge[] = [];
-        setNodes((nds) => {
-          const triggerNode = getNode("trigger");
-          if (triggerNode === undefined) {
-            return nds;
-          }
-          let prevNode = triggerNode;
-          const newNodes = possibleActions
-            .filter((action) => data.response.includes(action.name))
-            .map((action) => {
-              let newNode = {
-                id: Math.random().toString(),
-                type: "actionNode",
-                position: {
-                  x: 100 + prevNode.position.x,
-                  y: 120 + prevNode.position.y,
-                },
-                data: structuredClone(action),
-              };
-
-              newEdges.push({
-                id: Math.random().toString(),
-                source: newNode.id,
-                target: prevNode.id,
-              });
-
-              prevNode = newNode;
-              return newNode;
-            });
-
-          return [triggerNode, ...newNodes];
-        });
-        setEdges((eds) => newEdges);
-      });
-  }
-
-   const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
-      if (node.type === "jobNode")
-         return;
-      const intersectingNodes = getIntersectingNodes(node).filter((n) => n.type === "jobNode");
-      if (intersectingNodes.length === 0)
-         return;
-      setNodes((nodes) => nodes.map((n) => {
-         if (n.id === node.id)
-            return { ...n, parentId: intersectingNodes[0].id, extent: "parent", expandParent: true };
-         return n;
-      }));
-   }, []); 
-
-  const addAction = useCallback(async (x: number, y: number, type: string, data: Step | Job) => {
-   if (type === "actionNode") {
-     const newNode = {
-       id: Math.random().toString(),
-       type: "actionNode",
-       position: { x: x, y: y },
-       data: data,
-     };
-
-     setNodes((nodes) =>
-       nodes.concat(newNode as ActionCardNode)
-     );
-     
-   } else if (type === "jobNode") {
-      console.log("Job Node");
-      setNodes((nodes) =>
-        nodes.concat({
-          id: Math.random().toString(),
-          type: "jobNode",
-          position: { x, y },
-          data: data,
-        } as JobCardNode)
-      );
-   }
+  const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
+    if (node.type === "jobNode") return;
+    const intersectingNodes = getIntersectingNodes(node).filter(
+      (n) => n.type === "jobNode"
+    );
+    if (intersectingNodes.length === 0) return;
+    setNodes((nodes) =>
+      nodes.map((n) => {
+        if (n.id === node.id)
+          return {
+            ...n,
+            parentId: intersectingNodes[0].id,
+            extent: "parent",
+            expandParent: true,
+          };
+        return n;
+      })
+    );
   }, []);
+
+  const addAction = useCallback(
+    async (x: number, y: number, type: string, data: Step | Job) => {
+      if (type === "actionNode") {
+        const newNode = {
+          id: Math.random().toString(),
+          type: "actionNode",
+          position: { x: x, y: y },
+          data: data,
+        };
+
+        setNodes((nodes) => nodes.concat(newNode as ActionNode));
+      } else if (type === "jobNode") {
+        console.log("Job Node");
+        setNodes((nodes) =>
+          nodes.concat({
+            id: Math.random().toString(),
+            type: "jobNode",
+            position: { x, y },
+            data: data,
+          } as JobNode)
+        );
+      }
+    },
+    []
+  );
 
   return (
     <div
@@ -212,7 +115,8 @@ function Playground() {
         e.preventDefault();
       }}
     >
-      <Sidebar defaults={possibleActions} handleDrop={addAction} handleGenerate={onGenerate} handleSubmit={onSubmit}/>
+      <Sidebar defaults={possibleActions} handleDrop={addAction} />
+      <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}

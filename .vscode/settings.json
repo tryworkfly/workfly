@@ -1,0 +1,5 @@
+{
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "ansible.python.interpreterPath": "/home/daniel/Projects/workfly/backend/.venv/bin/python"
+}
