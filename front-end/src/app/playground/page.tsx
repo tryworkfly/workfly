@@ -48,42 +48,42 @@ function Playground() {
       //    .then((res) => res.json())
       //    .then((data) => setPossibleActions(data));   
       setPossibleActions([
-        {
-          name: "Deploy",
-          description: "This step deploy the website",
-          inputs: [
-            {
-              name: "API key",
-              description: "API KEY",
-              type: "string",
-              required: true,
-            },
-            {
-              name: "Magic number",
-              description: "Magic number",
-              type: "number",
-              required: false,
-            },
-          ],
-        },
-        {
-          name: "Checkout",
-          description: "This step checkout",
-          inputs: [
-            {
-              name: "input1",
-              description: "This is the first input",
-              type: "string",
-              required: true,
-            },
-            {
-              name: "input2",
-              description: "This is the second input",
-              type: "boolean",
-              required: false,
-            },
-          ],
-        },
+      //   {
+      //     name: "Deploy",
+      //     description: "This step deploy the website",
+      //     inputs: [
+      //       {
+      //         name: "API key",
+      //         description: "API KEY",
+      //         type: "string",
+      //         required: true,
+      //       },
+      //       {
+      //         name: "Magic number",
+      //         description: "Magic number",
+      //         type: "number",
+      //         required: false,
+      //       },
+      //     ],
+      //   },
+      //   {
+      //     name: "Checkout",
+      //     description: "This step checkout",
+      //     inputs: [
+      //       {
+      //         name: "input1",
+      //         description: "This is the first input",
+      //         type: "string",
+      //         required: true,
+      //       },
+      //       {
+      //         name: "input2",
+      //         description: "This is the second input",
+      //         type: "boolean",
+      //         required: false,
+      //       },
+      //     ],
+      //   },
       ]);
    }, []);
 
