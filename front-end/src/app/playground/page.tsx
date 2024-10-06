@@ -123,17 +123,19 @@ function Playground() {
           const triggerNode = getNode("trigger");
           if (triggerNode === undefined) return nds;
           let prevNode = triggerNode;
-          const newNodes = (possibleActions as Step[])
-            .filter((action) => data.response.includes(action.name))
-            .map((action, i) => {
-              let newNode = {
+          // console.log(typeof data.response);
+          // console.log(data.response);
+          // //console.log(data.response.map((action: string) => action));
+          // const newNodes: Node[] = [];
+          const newNodes = data.response.map((action: string) => {
+              let newNode: Node = {
                 id: Math.random().toString(),
                 type: "actionNode",
                 position: {
                   x: 100 + prevNode.position.x,
                   y: 120 + prevNode.position.y,
                 },
-                data: structuredClone(action),
+                data: structuredClone((possibleActions as Step[]).find((step) => step.name === action)) as Step,
               };
               newEdges.push({
                 id: Math.random().toString(),
@@ -142,7 +144,27 @@ function Playground() {
               });
               prevNode = newNode;
               return newNode;
-            });
+          });
+          // const newNodes = (possibleActions as Step[])
+          //   .filter((action) => data.response.includes(action.name))
+          //   .map((action, i) => {
+          //     let newNode = {
+          //       id: Math.random().toString(),
+          //       type: "actionNode",
+          //       position: {
+          //         x: 100 + prevNode.position.x,
+          //         y: 120 + prevNode.position.y,
+          //       },
+          //       data: structuredClone(action),
+          //     };
+          //     newEdges.push({
+          //       id: Math.random().toString(),
+          //       source: newNode.id,
+          //       target: prevNode.id,
+          //     });
+          //     prevNode = newNode;
+          //     return newNode;
+          //   });
 
           return [triggerNode, ...newNodes];
         });

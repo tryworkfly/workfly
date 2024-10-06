@@ -7,6 +7,7 @@ from db.step import StepClient
 from workflow.workflow_request import WorkflowAIRequest, WorkflowRequest, WorkflowResponse
 from workflow.workflow_to_yaml import WorkflowToYAML
 
+import json
 from openai import OpenAI
 # from huggingface_hub import InferenceClient, InferenceEndpoint
 from dotenv import load_dotenv
@@ -70,9 +71,9 @@ def create_app():
         # client.
 
         system_prompt = """
-        You will help the user return a list of actions that is order of what the user wants to do. The only valid actions are: 
+        You will help the user return a list of actions that is ordered by what the users mention. The only valid actions are: 
         "Run Code", "Random Rickroll", "Super Linter", "Checkout", "Deploy to GitHub Pages".
-        Only return these actions in an array and nothing else.
+        Only return these actions in an array and nothing else without [].
         """
 
         client = OpenAI(api_key=api_token)
@@ -91,7 +92,7 @@ def create_app():
             content={
                 "success": True,
                 "message": "AI Workflow created successfully",
-                "response": chat_response.choices[0].message.content,
+                "response": chat_response.choices[0].message.content.split(', '),
             },
         )
 
