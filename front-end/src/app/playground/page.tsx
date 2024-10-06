@@ -21,10 +21,19 @@ import {
 import "@xyflow/react/dist/style.css";
 import { ActionCardNode } from "@/components/ActionCard";
 import { JobCardNode } from "@/components/JobCard";
+import { TriggerCardNode } from "@/components/TriggerCard";
 import nodeTypes from "@/components/NodeTypes";
 import Sidebar from "@/components/sidebar";
 
-const initialNodes: Node[] = [];
+const initialNodes: Node[] = [
+   {
+      id: "trigger",
+      type: "triggerNode",
+      position: { x: 500, y: 300 },
+      data: { label: "onPush" },
+      deletable: false,
+   }
+];
 
 const initialEdges: Edge[] = [];
 
@@ -42,59 +51,65 @@ function Playground() {
 
   const [possibleActions, setPossibleActions] = useState<Step[]>([]);
   // const { getInterSectionNodes}
-  const { getIntersectingNodes, getZoom, getNodes } = useReactFlow();
+  const { getIntersectingNodes, getZoom, getNodes, getEdges, getNode } = useReactFlow();
    useEffect(() => {
-      // fetch("/api/actions")
-      //    .then((res) => res.json())
-      //    .then((data) => setPossibleActions(data));   
-      setPossibleActions([
-      //   {
-      //     name: "Deploy",
-      //     description: "This step deploy the website",
-      //     inputs: [
-      //       {
-      //         name: "API key",
-      //         description: "API KEY",
-      //         type: "string",
-      //         required: true,
-      //       },
-      //       {
-      //         name: "Magic number",
-      //         description: "Magic number",
-      //         type: "number",
-      //         required: false,
-      //       },
-      //     ],
-      //   },
-      //   {
-      //     name: "Checkout",
-      //     description: "This step checkout",
-      //     inputs: [
-      //       {
-      //         name: "input1",
-      //         description: "This is the first input",
-      //         type: "string",
-      //         required: true,
-      //       },
-      //       {
-      //         name: "input2",
-      //         description: "This is the second input",
-      //         type: "boolean",
-      //         required: false,
-      //       },
-      //     ],
-      //   },
-      ]);
+     fetch("http://localhost:8000/steps")
+       .then((res) => res.json())
+       .then((data) => setPossibleActions(data));
    }, []);
 
   const onConnect: OnConnect = useCallback(
-    // addEdge()
     (params: Connection) =>
       setEdges((eds) =>
         addEdge(params, eds)
       ),
     [setEdges]
   );
+
+  const onSubmit = async () => {
+    const nodes = getNodes();
+    const edges = getEdges();
+    let graph = new Map();
+    for (const e of edges) {
+      graph.set(e.target, e.source);
+    }
+
+    if (graph.size === 0)
+      return;
+
+    let wfRequest: WorkflowRequest = {
+      name: "New workflow",
+      runName: "New workflow Runname",
+      trigger: [{
+        event: "push",
+        config: {}
+      }],
+      jobs: [{
+        name: "Main Job",
+        steps: []
+      }],
+      jobEdges: []
+    };
+
+    let currNodeId = graph.get("trigger");
+    while (true) {
+      const node = getNode(currNodeId);
+      if (node === undefined)
+        return;
+      wfRequest.jobs[0].steps.push(node.data as Step);
+      if (!graph.has(currNodeId))
+          break;
+    }
+    fetch("http://localhost:8000/workflows", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(wfRequest),
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  }
 
    const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
       if (node.type === "jobNode")
@@ -143,7 +158,7 @@ function Playground() {
         e.preventDefault();
       }}
     >
-      <Sidebar defaults={possibleActions} handleDrop={addAction} />
+      <Sidebar defaults={possibleActions} handleDrop={addAction} handleSubmit={onSubmit}/>
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}

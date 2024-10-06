@@ -1,10 +1,12 @@
 import { useCallback } from "react";
 import { ActionCard } from "./ActionCard";
 import { JobCard } from "./JobCard";
+import { Button } from "@/components/ui/button";
 
 export default function Sidebar(props: {
   defaults: Step[];
   handleDrop: (x: number, y: number, type: string, data: Step | Job) => void;
+  handleSubmit: () => void;
 }) {
   const onActionDrop = useCallback((e: React.DragEvent, data: Step) => {
     props.handleDrop(e.clientX, e.clientY, "actionNode", data);
@@ -32,10 +34,12 @@ export default function Sidebar(props: {
           }}
           onDragEnd={(e) => onActionDrop(e, structuredClone(step))}
         >
-          <ActionCard key={index} {...step} />
+          <ActionCard key={index} data={step} />
         </div>
       ))}
-      <div
+
+      <Button onClick={props.handleSubmit}>Submit</Button>
+      {/* <div
         draggable
         onDragOver={(e) => {
           e.preventDefault();
@@ -46,7 +50,7 @@ export default function Sidebar(props: {
         onDragEnd={(e) => onJobDrop(e)}
       >
         <JobCard name="Job #1" steps={[]}/>
-      </div>
+      </div> */}
     </div>
   );
 }

@@ -1,8 +1,4 @@
 type Step = {
-  // name: string;
-  // description: string;
-  // inputs: StepInput[];
-  // isDefault?: boolean;
   name: string;
   id: string;
   version: string;
