@@ -10,7 +10,7 @@ def load_config():
 if __name__ == "__main__":
     config = load_config()
     port = config.get("PORT") or 8000
-    env = config.get("ENV", "dev")
+    env = config.get("ENV", "production")
 
     uvicorn.run(
         app="app.server:app",
