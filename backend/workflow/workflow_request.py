@@ -50,3 +50,4 @@ class WorkflowRequest(BaseModel):
 
 class WorkflowResponse(BaseModel):
     message: str
+    workflow_yaml: str

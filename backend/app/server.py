@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from workflow.workflow_request import WorkflowRequest, WorkflowResponse
-
+from workflow.workflow_to_yaml import WorkflowToYAML
 
 def create_app():
     app = FastAPI()
@@ -19,8 +19,10 @@ def create_app():
 
     @app.post("/workflow")
     async def create_workflow(workflow: WorkflowRequest) -> WorkflowResponse:
+        workflow_yaml = WorkflowToYAML.to_yaml(workflow)
         return WorkflowResponse(
             message="Workflow created successfully",
+            workflow_yaml=workflow_yaml,
         )
 
     @app.get("/")

@@ -1,3 +1,4 @@
+import yaml
 from workflow.workflow_to_yaml import JobYAML, WorkflowToYAML
 from workflow.workflow_request import (
     JobRequest,
@@ -15,7 +16,7 @@ class TestWorkflowToYAML:
         on: dict[str, dict],
         jobs: dict[str, JobYAML],
     ):
-        assert expected_yaml == {
+        assert yaml.safe_load(expected_yaml) == {
             "name": workflow_request.name,
             "run-name": workflow_request.runName,
             "permissions": workflow_request.permissions,

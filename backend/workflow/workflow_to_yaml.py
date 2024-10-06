@@ -1,5 +1,7 @@
 from typing import Iterator, NotRequired, TypedDict
 
+import yaml
+
 from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
 
 StepActionYAML = TypedDict(
@@ -37,16 +39,19 @@ class WorkflowYAML(TypedDict):
 
 class WorkflowToYAML:
     @staticmethod
-    def to_yaml(workflow: WorkflowRequest) -> WorkflowYAML:
+    def to_yaml(workflow: WorkflowRequest):
         triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
         jobs = WorkflowToYAML._jobs_to_yaml(iter(workflow.jobs), workflow.job_edges)
-        return {
-            "name": workflow.name,
-            "run-name": workflow.runName,
-            "permissions": workflow.permissions,
-            "on": triggers,
-            "jobs": jobs,
-        }
+        return yaml.dump(
+            {
+                "name": workflow.name,
+                "run-name": workflow.runName,
+                "permissions": workflow.permissions,
+                "on": triggers,
+                "jobs": jobs,
+            },
+            sort_keys=False,
+        )
 
     @staticmethod
     def _triggers_to_yaml(triggers: list[TriggerRequest]) -> dict[str, dict]:
