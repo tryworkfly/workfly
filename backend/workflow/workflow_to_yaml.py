@@ -34,6 +34,15 @@ class WorkflowYAML(TypedDict):
     jobs: dict[str, JobYAML]
 
 
+def str_presenter(dumper, data: str):
+    if len(data.splitlines()) > 1:  # check for multiline string
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    return dumper.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+yaml.add_representer(str, str_presenter)
+
+
 class WorkflowToYAML:
     @staticmethod
     def to_yaml(workflow: WorkflowRequest):
@@ -43,7 +52,7 @@ class WorkflowToYAML:
         )
 
         permissions = {
-            resource: list(actions)
+            resource: ",".join(actions)
             for resource, actions in required_permissions.items()
         }
         return yaml.dump(
@@ -148,11 +157,13 @@ class WorkflowToYAML:
 
             step_yaml = {
                 "name": step_request.name,
-                "uses": f"{step_request.id}@{step.version}"
-                if step_request.id and step
-                else None,
-                "with": step_request.inputs,
-                "run": step_request.run,
+                **(
+                    {"uses": f"{step_request.id}@{step.version}"}
+                    if step_request.id and step
+                    else {}
+                ),
+                **({"with": step_request.inputs} if step_request.inputs else {}),
+                **({"run": step_request.run} if step_request.run else {}),
             }
 
             steps_yaml.append(step_yaml)

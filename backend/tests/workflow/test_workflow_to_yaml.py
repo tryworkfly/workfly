@@ -16,7 +16,7 @@ class TestWorkflowToYAML:
         self,
         expected_yaml: str,
         workflow_request: WorkflowRequest,
-        permissions: dict[str, list[str]],
+        permissions: dict[str, str],
         on: dict[str, dict],
         jobs: dict[str, JobYAML],
     ):
@@ -53,21 +53,14 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
-            permissions={"contents": ["read"]},
+            permissions={"contents": "read"},
             on={"test_event": {}},
             jobs={
                 "test-job-request": {
                     "name": "Test Job Request",
                     "runs-on": ["linux"],
                     "needs": [],
-                    "steps": [
-                        {
-                            "name": "Test Step",
-                            "uses": "test_uses@v0.0.1",
-                            "with": {},
-                            "run": None,
-                        }
-                    ],
+                    "steps": [{"name": "Test Step", "uses": "test_uses@v0.0.1"}],
                 }
             },
         )
@@ -84,9 +77,8 @@ class TestWorkflowToYAML:
                     steps=[
                         StepRequest(
                             name="Test Step",
-                            inputs={},
+                            inputs=None,
                             id="test_uses",
-                            run="ls",
                         )
                     ],
                 ),
@@ -95,9 +87,8 @@ class TestWorkflowToYAML:
                     steps=[
                         StepRequest(
                             name="Test Step 2",
-                            inputs={},
+                            inputs=None,
                             id="test_uses_2",
-                            run="echo",
                         )
                     ],
                 ),
@@ -109,7 +100,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
-            permissions={"contents": ["read", "write"]},
+            permissions={"contents": "read,write"},
             on={"test_event": {}},
             jobs={
                 "test-job-request": {
@@ -120,8 +111,6 @@ class TestWorkflowToYAML:
                         {
                             "name": "Test Step",
                             "uses": "test_uses@v0.0.1",
-                            "with": {},
-                            "run": "ls",
                         }
                     ],
                 },
@@ -133,8 +122,6 @@ class TestWorkflowToYAML:
                         {
                             "name": "Test Step 2",
                             "uses": "test_uses_2@v0.0.1",
-                            "with": {},
-                            "run": "echo",
                         }
                     ],
                 },
@@ -179,7 +166,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
-            permissions={"contents": ["write"]},
+            permissions={"contents": "write"},
             on={"push": {"branches": ["main"]}},
             jobs={
                 "build-and-deploy": {
@@ -190,13 +177,9 @@ class TestWorkflowToYAML:
                         {
                             "name": "Checkout",
                             "uses": "actions/checkout@v4.2.0",
-                            "with": None,
-                            "run": None,
                         },
                         {
                             "name": "Install and Build",
-                            "uses": None,
-                            "with": None,
                             "run": "npm ci\nnpm run build",
                         },
                         {
@@ -205,7 +188,6 @@ class TestWorkflowToYAML:
                             "with": {
                                 "folder": "dist",
                             },
-                            "run": None,
                         },
                     ],
                 }

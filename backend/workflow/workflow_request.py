@@ -17,8 +17,12 @@ class StepRequest(BaseModel):
     @field_validator("run")
     @classmethod
     def validate_run(cls, v: str | None, info: ValidationInfo) -> str | None:
-        if "id" not in info.data and v is None:
+        if info.data.get("id") is None and v is None:
             raise ValueError("Either 'id' or 'run' must be defined")
+        if info.data.get("id") and v is not None:
+            raise ValueError("'id' and 'run' cannot be used together")
+        if info.data.get("inputs") and v is not None:
+            raise ValueError("'inputs' and 'run' cannot be used together")
         return v
 
 
