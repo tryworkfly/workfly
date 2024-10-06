@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ValidationInfo
 from typing import Literal
 
 
@@ -10,7 +10,16 @@ class TriggerRequest(BaseModel):
 class StepRequest(BaseModel):
     name: str
     inputs: dict
-    uses: str  # corresponding to a certain Action in DB
+    id: str | None  # corresponding to a certain Action in DB
+    run: str | None = None
+    """Command to run at given step"""
+
+    @field_validator("run")
+    @classmethod
+    def validate_run(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if "id" not in info.data and v is None:
+            raise ValueError("Either 'id' or 'run' must be defined")
+        return v
 
 
 class JobRequest(BaseModel):
@@ -31,7 +40,7 @@ class WorkflowRequest(BaseModel):
     permissions: dict[str, Literal["read", "write", "none"]]
     trigger: list[TriggerRequest]
     jobs: list[JobRequest]
-    job_edges: list[tuple[str, str]]  # source to target
+    jobEdges: list[tuple[str, str]]  # source to target
 
     @field_validator("trigger")
     @classmethod
@@ -50,4 +59,4 @@ class WorkflowRequest(BaseModel):
 
 class WorkflowResponse(BaseModel):
     message: str
-    workflow_yaml: str
+    workflowYaml: str

@@ -38,13 +38,12 @@ class TestWorkflowToYAML:
                         StepRequest(
                             name="Test Step",
                             inputs={},
-                            uses="test_uses",
-                            run="test_run",
+                            id="test_uses",
                         )
                     ],
                 )
             ],
-            job_edges=[],
+            jobEdges=[],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)
@@ -62,6 +61,7 @@ class TestWorkflowToYAML:
                             "name": "Test Step",
                             "uses": "test_uses",
                             "with": {},
+                            "run": None,
                         }
                     ],
                 }
@@ -81,8 +81,8 @@ class TestWorkflowToYAML:
                         StepRequest(
                             name="Test Step",
                             inputs={},
-                            uses="test_uses",
-                            run="test_run",
+                            id="test_uses",
+                            run="ls",
                         )
                     ],
                 ),
@@ -92,13 +92,13 @@ class TestWorkflowToYAML:
                         StepRequest(
                             name="Test Step 2",
                             inputs={},
-                            uses="test_uses",
-                            run="test_run",
+                            id="test_uses",
+                            run="echo",
                         )
                     ],
                 ),
             ],
-            job_edges=[("Test Job Request", "Test Job Request 2")],
+            jobEdges=[("Test Job Request", "Test Job Request 2")],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)
@@ -116,6 +116,7 @@ class TestWorkflowToYAML:
                             "name": "Test Step",
                             "uses": "test_uses",
                             "with": {},
+                            "run": "ls",
                         }
                     ],
                 },
@@ -128,6 +129,7 @@ class TestWorkflowToYAML:
                             "name": "Test Step 2",
                             "uses": "test_uses",
                             "with": {},
+                            "run": "echo",
                         }
                     ],
                 },

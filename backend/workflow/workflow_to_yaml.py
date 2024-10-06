@@ -8,14 +8,11 @@ StepActionYAML = TypedDict(
     "StepActionYAML",
     {
         "name": str,
-        "uses": str,
+        "uses": NotRequired[str],
         "with": NotRequired[dict],
+        "run": NotRequired[str],
     },
 )
-
-
-class StepRunYAML(TypedDict):
-    run: str
 
 
 JobYAML = TypedDict(
@@ -24,7 +21,7 @@ JobYAML = TypedDict(
         "name": str,
         "runs-on": list[str],
         "needs": list[str],
-        "steps": list[StepActionYAML | StepRunYAML],
+        "steps": list[StepActionYAML],
     },
 )
 
@@ -41,7 +38,7 @@ class WorkflowToYAML:
     @staticmethod
     def to_yaml(workflow: WorkflowRequest):
         triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
-        jobs = WorkflowToYAML._jobs_to_yaml(iter(workflow.jobs), workflow.job_edges)
+        jobs = WorkflowToYAML._jobs_to_yaml(iter(workflow.jobs), workflow.jobEdges)
         return yaml.dump(
             {
                 "name": workflow.name,
@@ -86,13 +83,14 @@ class WorkflowToYAML:
         }
 
     @staticmethod
-    def _steps_to_yaml(steps: list[StepRequest]) -> list[StepActionYAML | StepRunYAML]:
+    def _steps_to_yaml(steps: list[StepRequest]) -> list[StepActionYAML]:
         # validate step based on "uses"
         return [
             {
                 "name": step.name,
-                "uses": step.uses,
+                "uses": step.id,  # include version
                 "with": step.inputs,
+                "run": step.run,
             }
             for step in steps
         ]

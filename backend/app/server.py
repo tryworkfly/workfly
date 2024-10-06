@@ -22,7 +22,7 @@ def create_app():
         workflow_yaml = WorkflowToYAML.to_yaml(workflow)
         return WorkflowResponse(
             message="Workflow created successfully",
-            workflow_yaml=workflow_yaml,
+            workflowYaml=workflow_yaml,
         )
 
     @app.get("/")
