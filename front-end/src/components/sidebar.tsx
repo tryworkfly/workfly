@@ -4,14 +4,14 @@ import { JobCard } from "./JobCard";
 
 export default function Sidebar(props: {
   defaults: Step[];
-  handleDrop: (x: number, y: number, type: string, data: Step | {name: string}) => void;
+  handleDrop: (x: number, y: number, type: string, data: Step | Job) => void;
 }) {
   const onActionDrop = useCallback((e: React.DragEvent, data: Step) => {
     props.handleDrop(e.clientX, e.clientY, "actionNode", data);
   }, []);
 
   const onJobDrop = useCallback((e: React.DragEvent) => {
-    props.handleDrop(e.clientX, e.clientY, "jobNode", { name: "Job #1" });
+    props.handleDrop(e.clientX, e.clientY, "jobNode", { name: "Job #1", steps: [] });
   }, []);
 
   return (
@@ -45,7 +45,7 @@ export default function Sidebar(props: {
         }}
         onDragEnd={(e) => onJobDrop(e)}
       >
-        <JobCard />
+        <JobCard name="Job #1" steps={[]}/>
       </div>
     </div>
   );

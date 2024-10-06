@@ -78,7 +78,7 @@ export default function Playground() {
 
   
 
-  const addAction = useCallback((x: number, y: number, type: string, data: Step | {name: string}) => {
+  const addAction = useCallback((x: number, y: number, type: string, data: Step | Job) => {
    // console.log("X: ", x, "Y: ", y, "Action: ", actionType);
    if (type === "actionNode") {
      setNodes((nodes) =>

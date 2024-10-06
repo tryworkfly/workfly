@@ -8,7 +8,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Handle, Position, Node, NodeProps } from "@xyflow/react";
+import { Node, NodeProps } from "@xyflow/react";
 
 export type ActionCardNode = Node<Step>;
 
