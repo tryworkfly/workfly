@@ -117,7 +117,7 @@ function Playground() {
       .then((data) => console.log(data));
   }
 
-  const onGenerate = useCallback(async (prompt: string) => {
+  const onGenerate = async (prompt: string) => {
     if (prompt === "") return;
     fetch("http://localhost:8000/ai", {
       method: "POST",
@@ -129,27 +129,41 @@ function Playground() {
       .then((res) => res.json())
       .then((data) => {
         console.log(data.response);
+        let newEdges: Edge[] = [];
         setNodes((nds) => {
           const triggerNode = getNode("trigger");
-          if (triggerNode === undefined) return nds;
+          if (triggerNode === undefined) {
+            return nds;
+          }
+          let prevNode = triggerNode;
           const newNodes = possibleActions
             .filter((action) => data.response.includes(action.name))
-            .map((action, i) => {
-              return {
+            .map((action) => {
+              let newNode = {
                 id: Math.random().toString(),
                 type: "actionNode",
                 position: {
-                  x: (i + 1) * 200 + triggerNode?.position.x,
-                  y: triggerNode?.position.y,
+                  x: 100 + prevNode.position.x,
+                  y: 120 + prevNode.position.y,
                 },
                 data: structuredClone(action),
               };
+
+              newEdges.push({
+                id: Math.random().toString(),
+                source: newNode.id,
+                target: prevNode.id,
+              });
+
+              prevNode = newNode;
+              return newNode;
             });
 
           return [triggerNode, ...newNodes];
         });
+        setEdges((eds) => newEdges);
       });
-  }, []);
+  }
 
    const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
       if (node.type === "jobNode")
