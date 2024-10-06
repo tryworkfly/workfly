@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Node, NodeProps, Handle, Position, useReactFlow } from "@xyflow/react";
 import { useCallback } from "react";
+import { Card, CardContent } from "./ui/card";
 
 export type ActionCardNode = Node<Step>;
 
@@ -41,25 +42,29 @@ export default function ActionCardNode(props: NodeProps<ActionCardNode>) {
 
 export function ActionCard({data, handler}: {data: Step, handler?: updateHandler}) {
    return (
-      <Accordion type="single" collapsible className="w-80 bg-white p-1">
-        <AccordionItem value="item-1">
-          <AccordionTrigger>
-            <div className="flex flex-col gap-y-4 w-full">
-              <h4 className="font-medium leading-none text-left">{data.name}</h4>
-              <p className="text-sm text-muted-foreground text-left">
-                  {data.description}
-              </p>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="grid gap-4 my-2">
-              <div className="grid gap-2">
-                  {data.inputs.map((input, index) => <ActionInput key={index} props={input} handler={handler} />)}
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      <Card>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-80 bg-white p-1">
+            <AccordionItem value="item-1">
+              <AccordionTrigger>
+                <div className="flex flex-col gap-y-4 w-full">
+                  <h4 className="font-medium leading-none text-left">{data.name}</h4>
+                  <p className="text-sm text-muted-foreground text-left">
+                      {data.description}
+                  </p>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="grid gap-4 my-2">
+                  <div className="grid gap-2">
+                      {data.inputs.map((input, index) => <ActionInput key={index} props={input} handler={handler} />)}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
    );
 }
 
