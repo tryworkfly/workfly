@@ -13,6 +13,9 @@
     - name: Pull backend
       community.docker.docker_image_pull:
         name: notdaniel/workfly-backend
+    - name: Pull frontend
+      community.docker.docker_image_pull:
+        name: notdaniel/workfly-frontend
 
 - name: Run Docker containers
   hosts: workfly
@@ -24,3 +27,10 @@
         init: true
         ports:
           - "8000:8000"
+    - name: Run frontend
+      community.docker.docker_container:
+        name: workfly-frontend
+        image: notdaniel/workfly-frontend
+        init: true
+        ports:
+          - "80:3000"
