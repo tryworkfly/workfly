@@ -39,4 +39,5 @@ workflow = WorkflowRequest(
     jobEdges=[],
 )
 
+# print(workflow.model_dump_json(indent=4))
 print(WorkflowToYAML.to_yaml(workflow))

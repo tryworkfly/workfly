@@ -20,7 +20,7 @@ def create_app():
             },
         )
 
-    @app.post("/workflow")
+    @app.post("/workflows")
     async def create_workflow(workflow: WorkflowRequest) -> WorkflowResponse:
         workflow_yaml = WorkflowToYAML.to_yaml(workflow)
         return WorkflowResponse(
