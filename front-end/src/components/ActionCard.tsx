@@ -15,9 +15,7 @@ export type ActionCardNode = Node<Step>;
 export default function ActionCardNode(props: NodeProps<ActionCardNode>) {
   return (
     <div>
-      <Handle type="source" position={Position.Left} />
       <ActionCard {...props.data} />
-      <Handle type="target" position={Position.Right} />
     </div>
   );
 }

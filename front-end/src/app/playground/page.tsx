@@ -10,70 +10,13 @@ import {
   BackgroundVariant,
   Edge,
   Node,
-  OnNodeDrag,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
 import { ActionCardNode } from "@/components/ActionCard";
+import { JobCardNode } from "@/components/JobCard";
 import nodeTypes from "@/components/NodeTypes";
 import Sidebar from "@/components/sidebar";
-
-// const initialNodes: ActionCardNode[] = [
-//   {
-//     id: "1",
-//     type: "actionNode",
-//     draggable: true,
-//     connectable: false,
-//     deletable: false,
-//     position: { x: 0, y: 0 },
-//     data: {
-//       name: "Action 1",
-//       description: "This is the first action",
-//       isDefault: true,
-//       inputs: [
-//         {
-//           name: "input1",
-//           description: "This is the first input",
-//           type: "string",
-//           required: true,
-//         },
-//         {
-//           name: "input2",
-//           description: "This is the second input",
-//           type: "number",
-//           required: false,
-//         },
-//       ],
-//     },
-//   },
-//   {
-//     id: "2",
-//     type: "actionNode",
-//     draggable: true,
-//     connectable: false,
-//     deletable: false,
-//     position: { x: 0, y: 100 },
-//     data: {
-//       name: "Action 2",
-//       description: "This is the second action",
-//       isDefault: true,
-//       inputs: [
-//         {
-//           name: "input1",
-//           description: "This is the first input",
-//           type: "string",
-//           required: true,
-//         },
-//         {
-//           name: "input2",
-//           description: "This is the second input",
-//           type: "boolean",
-//           required: false,
-//         },
-//       ],
-//     },
-//   },
-// ];
 
 const initialNodes: Node[] = [];
 
@@ -135,14 +78,28 @@ export default function Playground() {
 
   
 
-  const addAction = useCallback((x: number, y: number, data: Step) => {
+  const addAction = useCallback((x: number, y: number, type: string, data: Step | {name: string}) => {
    // console.log("X: ", x, "Y: ", y, "Action: ", actionType);
-   setNodes((nodes) => nodes.concat({
-      id: Math.random().toString(),
-      type: "actionNode",
-      position: { x, y },
-      data: data,
-   } as ActionCardNode))
+   if (type === "actionNode") {
+     setNodes((nodes) =>
+       nodes.concat({
+         id: Math.random().toString(),
+         type: "actionNode",
+         position: { x, y },
+         data: data,
+       } as ActionCardNode)
+     );
+   } else if (type === "jobNode") {
+      console.log("Job Node");
+      setNodes((nodes) =>
+        nodes.concat({
+          id: Math.random().toString(),
+          type: "jobNode",
+          position: { x, y },
+          data: data,
+        } as JobCardNode)
+      );
+   }
   }, []);
 
   return (
@@ -159,7 +116,6 @@ export default function Playground() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-      //   onNodeDragStart={onNodeDrag}
       >
         <Controls />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
