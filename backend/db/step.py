@@ -23,6 +23,22 @@ class Step:
 
 _steps: OrderedDict[str, Step] = OrderedDict()
 
+_steps["custom/code"] = Step(
+    name="Run Code",
+    id="custom/code",
+    version="v1.0.0",
+    category="Utility",
+    description="Run custom code",
+    inputs=[
+        StepInput(
+            name="code",
+            type="string",
+            required=True,
+            description="The code to run",
+        ),
+    ],
+)
+
 _steps["actions/checkout"] = Step(
     name="Checkout",
     id="actions/checkout",

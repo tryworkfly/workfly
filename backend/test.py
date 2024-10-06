@@ -39,5 +39,30 @@ workflow = WorkflowRequest(
     jobEdges=[],
 )
 
+workflow = WorkflowRequest(
+    name="Run Tests",
+    runName="Run Tests",
+    trigger=[TriggerRequest(event="pull_request", config={"branches": ["main"]})],
+    jobs=[
+        JobRequest(
+            name="Run Tests",
+            steps=[
+                StepRequest(
+                    name="Checkout",
+                    inputs=None,
+                    id="actions/checkout",
+                ),
+                StepRequest(
+                    name="Run Tests",
+                    inputs=None,
+                    id=None,
+                    run="npm run test",
+                ),
+            ],
+        )
+    ],
+    jobEdges=[],
+)
+
 # print(workflow.model_dump_json(indent=4))
 print(WorkflowToYAML.to_yaml(workflow))

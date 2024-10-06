@@ -1,29 +1,16 @@
-from pydantic import BaseModel, field_validator, ValidationInfo
-from typing import Literal
+from pydantic import BaseModel, field_validator
+from typing import Any, Literal
 
 
 class TriggerRequest(BaseModel):
     event: str
-    config: dict
+    config: dict[str, Any]
 
 
 class StepRequest(BaseModel):
     name: str
-    inputs: dict | None
-    id: str | None  # corresponding to a certain Action in DB
-    run: str | None = None
-    """Command to run at given step"""
-
-    @field_validator("run")
-    @classmethod
-    def validate_run(cls, v: str | None, info: ValidationInfo) -> str | None:
-        if info.data.get("id") is None and v is None:
-            raise ValueError("Either 'id' or 'run' must be defined")
-        if info.data.get("id") and v is not None:
-            raise ValueError("'id' and 'run' cannot be used together")
-        if info.data.get("inputs") and v is not None:
-            raise ValueError("'inputs' and 'run' cannot be used together")
-        return v
+    inputs: dict[str, Any]
+    id: str  # corresponding to a certain Action in DB
 
 
 class JobRequest(BaseModel):
@@ -40,7 +27,7 @@ class JobRequest(BaseModel):
 
 class WorkflowRequest(BaseModel):
     name: str
-    runName: str
+    runName: str | None = None
     permissions: dict[str, list[Literal["read", "write"]]] | None = None
     trigger: list[TriggerRequest]
     jobs: list[JobRequest]
