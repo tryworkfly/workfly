@@ -1,3 +1,4 @@
+'use client';
 import {
   Accordion,
   AccordionContent,
@@ -11,32 +12,38 @@ import { Handle, Position, Node, NodeProps } from "@xyflow/react";
 
 export type ActionCardNode = Node<Step>;
 
-export default function ActionCard(props: NodeProps<ActionCardNode>) {
+export default function ActionCardNode(props: NodeProps<ActionCardNode>) {
   return (
     <div>
       <Handle type="source" position={Position.Left} />
+      <ActionCard {...props.data} />
+      <Handle type="target" position={Position.Right} />
+    </div>
+  );
+}
+
+export function ActionCard(data: Step) {
+   return (
       <Accordion type="single" collapsible className="w-80 bg-white p-1">
         <AccordionItem value="item-1">
           <AccordionTrigger>
             <div className="flex flex-col gap-y-4 w-full">
-              <h4 className="font-medium leading-none text-left">{props.data.name}</h4>
+              <h4 className="font-medium leading-none text-left">{data.name}</h4>
               <p className="text-sm text-muted-foreground text-left">
-                  {props.data.description}
+                  {data.description}
               </p>
             </div>
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid gap-4 my-2">
               <div className="grid gap-2">
-                  {props.data.inputs.map((input, index) => <ActionInput key={index} {...input} />)}
+                  {data.inputs.map((input, index) => <ActionInput key={index} {...input} />)}
               </div>
             </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <Handle type="target" position={Position.Right} />
-    </div>
-  );
+   );
 }
 
 function ActionInput(props: StepInput) {

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import ActionCard from "./ActionCard";
+import ActionCardNode from "./ActionCard";
 
 const nodeTypes = {
-    actionNode: ActionCard,
+    actionNode: ActionCardNode,
 };
 
 export default nodeTypes;
