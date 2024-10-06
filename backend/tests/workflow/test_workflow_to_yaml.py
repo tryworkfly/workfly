@@ -14,15 +14,16 @@ from workflow.workflow_request import (
 class TestWorkflowToYAML:
     def _assert_yaml_equal(
         self,
-        expected_yaml: dict,
+        expected_yaml: str,
         workflow_request: WorkflowRequest,
+        permissions: dict[str, list[str]],
         on: dict[str, dict],
         jobs: dict[str, JobYAML],
     ):
         assert yaml.safe_load(expected_yaml) == {
             "name": workflow_request.name,
             "run-name": workflow_request.runName,
-            "permissions": workflow_request.permissions,
+            "permissions": permissions,
             "on": on,
             "jobs": jobs,
         }
@@ -32,7 +33,6 @@ class TestWorkflowToYAML:
         workflow = WorkflowRequest(
             name="test_workflow",
             runName="test_workflow_run",
-            permissions={"actions": "write"},
             trigger=[TriggerRequest(event="test_event", config={})],
             jobs=[
                 JobRequest(
@@ -53,6 +53,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
+            permissions={"contents": ["read"]},
             on={"test_event": {}},
             jobs={
                 "test-job-request": {
@@ -76,7 +77,6 @@ class TestWorkflowToYAML:
         workflow = WorkflowRequest(
             name="test_workflow",
             runName="test_workflow_run",
-            permissions={"actions": "write"},
             trigger=[TriggerRequest(event="test_event", config={})],
             jobs=[
                 JobRequest(
@@ -96,7 +96,7 @@ class TestWorkflowToYAML:
                         StepRequest(
                             name="Test Step 2",
                             inputs={},
-                            id="test_uses",
+                            id="test_uses_2",
                             run="echo",
                         )
                     ],
@@ -109,6 +109,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
+            permissions={"contents": ["write", "read"]},
             on={"test_event": {}},
             jobs={
                 "test-job-request": {
@@ -131,7 +132,7 @@ class TestWorkflowToYAML:
                     "steps": [
                         {
                             "name": "Test Step 2",
-                            "uses": "test_uses@v0.0.1",
+                            "uses": "test_uses_2@v0.0.1",
                             "with": {},
                             "run": "echo",
                         }
@@ -145,11 +146,6 @@ class TestWorkflowToYAML:
         workflow = WorkflowRequest(
             name="Deploy to GitHub Pages",
             runName="Deploy to GitHub Pages",
-            permissions={
-                "contents": "read",
-                "pages": "write",
-                "id-token": "write",
-            },
             trigger=[TriggerRequest(event="push", config={"branches": ["main"]})],
             jobs=[
                 JobRequest(
@@ -183,6 +179,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
+            permissions={"contents": ["write"]},
             on={"push": {"branches": ["main"]}},
             jobs={
                 "build-and-deploy": {

@@ -11,6 +11,17 @@ _steps["test_uses"] = Step(
     category="Test",
     description="Test Step",
     inputs=[],
+    required_permissions={"contents": {"read"}},
+)
+
+_steps["test_uses_2"] = Step(
+    name="Test Step 2",
+    id="test_uses_2",
+    version="v0.0.1",
+    category="Test",
+    description="Test Step 2",
+    inputs=[],
+    required_permissions={"contents": {"write"}},
 )
 
 _steps["actions/checkout"] = Step(
@@ -48,6 +59,7 @@ _steps["JamesIves/github-pages-deploy-action"] = Step(
             description="The folder to deploy",
         )
     ],
+    required_permissions={"contents": {"write"}},
 )
 
 

@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import OrderedDict
 
 
@@ -18,6 +18,7 @@ class Step:
     category: str
     description: str
     inputs: list[StepInput]
+    required_permissions: dict[str, set[str]] = field(default_factory=dict)
 
 
 _steps: OrderedDict[str, Step] = OrderedDict()
@@ -57,6 +58,7 @@ _steps["JamesIves/github-pages-deploy-action"] = Step(
             description="The folder to deploy",
         )
     ],
+    required_permissions={"contents": {"write"}},
 )
 
 

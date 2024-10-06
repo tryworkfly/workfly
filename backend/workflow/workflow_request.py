@@ -37,7 +37,7 @@ class JobRequest(BaseModel):
 class WorkflowRequest(BaseModel):
     name: str
     runName: str
-    permissions: dict[str, Literal["read", "write", "none"]]
+    permissions: dict[str, list[Literal["read", "write"]]] | None = None
     trigger: list[TriggerRequest]
     jobs: list[JobRequest]
     jobEdges: list[tuple[str, str]]  # source to target

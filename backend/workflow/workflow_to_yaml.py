@@ -38,12 +38,19 @@ class WorkflowToYAML:
     @staticmethod
     def to_yaml(workflow: WorkflowRequest):
         triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
-        jobs = WorkflowToYAML._jobs_to_yaml(iter(workflow.jobs), workflow.jobEdges)
+        jobs, required_permissions = WorkflowToYAML._jobs_to_yaml(
+            iter(workflow.jobs), workflow.jobEdges
+        )
+
+        permissions = {
+            resource: list(actions)
+            for resource, actions in required_permissions.items()
+        }
         return yaml.dump(
             {
                 "name": workflow.name,
                 "run-name": workflow.runName,
-                "permissions": workflow.permissions,
+                "permissions": permissions,
                 "on": triggers,
                 "jobs": jobs,
             },
@@ -59,33 +66,58 @@ class WorkflowToYAML:
         return job_name.lower().replace(" ", "-")
 
     @staticmethod
+    def _merge_required_permissions(
+        required_permissions: dict[str, set[str]],
+        step_required_permissions: dict[str, set[str]],
+    ):
+        new_required_permissions = required_permissions.copy()
+        for resource, actions in step_required_permissions.items():
+            if resource not in new_required_permissions:
+                new_required_permissions[resource] = set()
+            new_required_permissions[resource].update(actions)
+
+        return new_required_permissions
+
+    @staticmethod
     def _jobs_to_yaml(
         jobs: Iterator[JobRequest], job_edges: list[tuple[str, str]]
-    ) -> dict[str, JobYAML]:
+    ) -> tuple[dict[str, JobYAML], dict[str, set[str]]]:
         job = next(jobs, None)
         if not job:
-            return {}
+            return {}, {}
 
         dependent_jobs: list[str] = []
         for source, target in job_edges:
             if target == job.name:
                 dependent_jobs.append(WorkflowToYAML._make_job_id(source))
 
+        steps_yaml, steps_required_permissions = WorkflowToYAML._steps_to_yaml(
+            job.steps
+        )
+        jobs_yaml, required_permissions = WorkflowToYAML._jobs_to_yaml(jobs, job_edges)
+
+        required_permissions = WorkflowToYAML._merge_required_permissions(
+            required_permissions, steps_required_permissions
+        )
+
         job_id = WorkflowToYAML._make_job_id(job.name)
-        return {
-            **WorkflowToYAML._jobs_to_yaml(jobs, job_edges),
-            job_id: {
-                "name": job.name,
-                "runs-on": ["linux"],
-                "needs": dependent_jobs,
-                "steps": WorkflowToYAML._steps_to_yaml(job.steps),
+        return (
+            {
+                **jobs_yaml,
+                job_id: {
+                    "name": job.name,
+                    "runs-on": ["linux"],
+                    "needs": dependent_jobs,
+                    "steps": steps_yaml,
+                },
             },
-        }
+            required_permissions,
+        )
 
     @staticmethod
     def _validate_step_request(step_request: StepRequest):
         step_db = StepClient()
-        step = step_db.get(step_request.id)
+        step = step_db.get(step_request.id or "")
 
         if step_request.id is not None:
             if not step:
@@ -98,10 +130,21 @@ class WorkflowToYAML:
         return step
 
     @staticmethod
-    def _steps_to_yaml(step_requests: list[StepRequest]) -> list[StepActionYAML]:
+    def _steps_to_yaml(
+        step_requests: list[StepRequest],
+    ) -> tuple[list[StepActionYAML], dict[str, set[str]]]:
+        """
+        Returns a tuple of YAMLified steps and required permissions for the steps.
+        """
         steps_yaml = []
+        required_permissions = dict[str, set[str]]()
         for step_request in step_requests:
             step = WorkflowToYAML._validate_step_request(step_request)
+
+            if step:
+                required_permissions = WorkflowToYAML._merge_required_permissions(
+                    required_permissions, step.required_permissions
+                )
 
             step_yaml = {
                 "name": step_request.name,
@@ -114,4 +157,4 @@ class WorkflowToYAML:
 
             steps_yaml.append(step_yaml)
 
-        return steps_yaml
+        return steps_yaml, required_permissions
