@@ -1,4 +1,4 @@
-from typing import Iterator, NotRequired, TypedDict
+from typing import Any, Iterator, NotRequired, TypedDict
 import yaml
 
 from db.step import StepClient
@@ -9,7 +9,7 @@ StepActionYAML = TypedDict(
     {
         "name": str,
         "uses": NotRequired[str],
-        "with": NotRequired[dict],
+        "with": NotRequired[dict[str, Any]],
         "run": NotRequired[str],
     },
 )
@@ -26,12 +26,16 @@ JobYAML = TypedDict(
 )
 
 
-class WorkflowYAML(TypedDict):
-    name: str
-    run_name: str
-    permissions: dict[str, str]
-    on: dict[str, dict]
-    jobs: dict[str, JobYAML]
+WorkflowYAML = TypedDict(
+    "WorkflowYAML",
+    {
+        "name": str,
+        "run-name": NotRequired[str],
+        "permissions": dict[str, str],
+        "on": dict[str, dict[str, Any]],
+        "jobs": dict[str, JobYAML],
+    },
+)
 
 
 def str_presenter(dumper, data: str):
@@ -55,10 +59,11 @@ class WorkflowToYAML:
             resource: ",".join(actions)
             for resource, actions in required_permissions.items()
         }
+
         return yaml.dump(
             {
                 "name": workflow.name,
-                "run-name": workflow.runName,
+                **({"run-name": workflow.runName} if workflow.runName else {}),
                 "permissions": permissions,
                 "on": triggers,
                 "jobs": jobs,
@@ -67,7 +72,7 @@ class WorkflowToYAML:
         )
 
     @staticmethod
-    def _triggers_to_yaml(triggers: list[TriggerRequest]) -> dict[str, dict]:
+    def _triggers_to_yaml(triggers: list[TriggerRequest]):
         return {trigger.event: trigger.config for trigger in triggers}
 
     @staticmethod
@@ -126,16 +131,15 @@ class WorkflowToYAML:
     @staticmethod
     def _validate_step_request(step_request: StepRequest):
         step_db = StepClient()
-        step = step_db.get(step_request.id or "")
+        step = step_db.get(step_request.id)
 
-        if step_request.id is not None:
-            if not step:
-                raise ValueError(f"Step {step_request.id} not found")
-            for input in step.inputs:
-                if input.required and (
-                    not step_request.inputs or input.name not in step_request.inputs
-                ):
-                    raise ValueError(f"Input {input.name} not found")
+        if not step:
+            raise ValueError(f"Step {step_request.id} not found")
+        for input in step.inputs:
+            if input.required and (
+                not step_request.inputs or input.name not in step_request.inputs
+            ):
+                raise ValueError(f"Input {input.name} not found")
         return step
 
     @staticmethod
@@ -150,21 +154,21 @@ class WorkflowToYAML:
         for step_request in step_requests:
             step = WorkflowToYAML._validate_step_request(step_request)
 
-            if step:
-                required_permissions = WorkflowToYAML._merge_required_permissions(
-                    required_permissions, step.required_permissions
-                )
+            required_permissions = WorkflowToYAML._merge_required_permissions(
+                required_permissions, step.required_permissions
+            )
 
-            step_yaml = {
-                "name": step_request.name,
-                **(
-                    {"uses": f"{step_request.id}@{step.version}"}
-                    if step_request.id and step
-                    else {}
-                ),
-                **({"with": step_request.inputs} if step_request.inputs else {}),
-                **({"run": step_request.run} if step_request.run else {}),
-            }
+            if step.id == "custom/code":
+                step_yaml = {
+                    "name": step_request.name,
+                    "run": step_request.inputs["code"],
+                }
+            else:
+                step_yaml = {
+                    "name": step_request.name,
+                    "uses": f"{step_request.id}@{step.version}",
+                    **({"with": step_request.inputs} if step_request.inputs else {}),
+                }
 
             steps_yaml.append(step_yaml)
 

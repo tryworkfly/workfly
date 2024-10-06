@@ -1,9 +1,13 @@
+import os
 import uvicorn
 import dotenv
 
 
 def load_config():
-    config = dotenv.dotenv_values(".env")
+    config = {
+        **dotenv.dotenv_values(".env"),
+        **os.environ,
+    }
     return config
 
 

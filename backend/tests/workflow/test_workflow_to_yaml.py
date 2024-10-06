@@ -66,6 +66,48 @@ class TestWorkflowToYAML:
         )
 
     @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
+    def test_custom_code_step(self):
+        workflow = WorkflowRequest(
+            name="test_workflow",
+            runName="test_workflow_run",
+            trigger=[TriggerRequest(event="test_event", config={})],
+            jobs=[
+                JobRequest(
+                    name="Test Job Request",
+                    steps=[
+                        StepRequest(
+                            name="Test Step",
+                            inputs={"code": "echo 'Hello, World!'"},
+                            id="custom/code",
+                        )
+                    ],
+                )
+            ],
+            jobEdges=[],
+        )
+
+        yaml = WorkflowToYAML.to_yaml(workflow)
+        self._assert_yaml_equal(
+            yaml,
+            workflow,
+            permissions={},
+            on={"test_event": {}},
+            jobs={
+                "test-job-request": {
+                    "name": "Test Job Request",
+                    "runs-on": ["ubuntu-latest"],
+                    "needs": [],
+                    "steps": [
+                        {
+                            "name": "Test Step",
+                            "run": "echo 'Hello, World!'",
+                        }
+                    ],
+                }
+            },
+        )
+
+    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
     def test_workflow_with_dependent_jobs(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -77,7 +119,7 @@ class TestWorkflowToYAML:
                     steps=[
                         StepRequest(
                             name="Test Step",
-                            inputs=None,
+                            inputs={},
                             id="test_uses",
                         )
                     ],
@@ -87,7 +129,7 @@ class TestWorkflowToYAML:
                     steps=[
                         StepRequest(
                             name="Test Step 2",
-                            inputs=None,
+                            inputs={},
                             id="test_uses_2",
                         )
                     ],
@@ -140,14 +182,13 @@ class TestWorkflowToYAML:
                     steps=[
                         StepRequest(
                             name="Checkout",
-                            inputs=None,
+                            inputs={},
                             id="actions/checkout",
                         ),
                         StepRequest(
                             name="Install and Build",
-                            inputs=None,
-                            id=None,
-                            run="npm ci\nnpm run build",
+                            inputs={"code": "npm ci\nnpm run build"},
+                            id="custom/code",
                         ),
                         StepRequest(
                             name="Deploy",

@@ -1,8 +1,12 @@
 import { useMemo } from "react";
-import ActionCard from "./ActionCard";
+import ActionCardNode from "./ActionCard";
+import JobCardNode from "./JobCard";
+import TriggerCardNode from "./TriggerCard";
 
 const nodeTypes = {
-    actionNode: ActionCard,
+    actionNode: ActionCardNode,
+    jobNode: JobCardNode,
+    triggerNode: TriggerCardNode,
 };
 
 export default nodeTypes;
