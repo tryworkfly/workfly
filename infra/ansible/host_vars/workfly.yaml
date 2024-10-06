@@ -1,0 +1,3 @@
+ansible_host: "35.233.222.71"
+ansible_ssh_user: ansible
+ansible_ssh_private_key_file: "~/.ssh/instance_workfly_ed25519"

@@ -1,0 +1,26 @@
+- name: Install Docker
+  hosts: workfly
+  become: true
+  vars:
+    docker_users:
+      - ansible
+  roles:
+    - geerlingguy.docker
+
+- name: Pull Docker containers
+  hosts: workfly
+  tasks:
+    - name: Pull backend
+      community.docker.docker_image_pull:
+        name: notdaniel/workfly-backend
+
+- name: Run Docker containers
+  hosts: workfly
+  tasks:
+    - name: Run backend
+      community.docker.docker_container:
+        name: workfly-backend
+        image: notdaniel/workfly-backend
+        init: true
+        ports:
+          - "8000:8000"
