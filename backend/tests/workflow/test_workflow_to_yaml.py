@@ -1,4 +1,7 @@
+from unittest.mock import patch
 import yaml
+
+from tests.mocks.db.step import MockStepClient
 from workflow.workflow_to_yaml import JobYAML, WorkflowToYAML
 from workflow.workflow_request import (
     JobRequest,
@@ -24,6 +27,7 @@ class TestWorkflowToYAML:
             "jobs": jobs,
         }
 
+    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
     def test_simple_workflow(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -32,7 +36,6 @@ class TestWorkflowToYAML:
             trigger=[TriggerRequest(event="test_event", config={})],
             jobs=[
                 JobRequest(
-                    id="1",
                     name="Test Job Request",
                     steps=[
                         StepRequest(
@@ -59,7 +62,7 @@ class TestWorkflowToYAML:
                     "steps": [
                         {
                             "name": "Test Step",
-                            "uses": "test_uses",
+                            "uses": "test_uses@v0.0.1",
                             "with": {},
                             "run": None,
                         }
@@ -68,6 +71,7 @@ class TestWorkflowToYAML:
             },
         )
 
+    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
     def test_workflow_with_dependent_jobs(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -114,7 +118,7 @@ class TestWorkflowToYAML:
                     "steps": [
                         {
                             "name": "Test Step",
-                            "uses": "test_uses",
+                            "uses": "test_uses@v0.0.1",
                             "with": {},
                             "run": "ls",
                         }
@@ -127,7 +131,7 @@ class TestWorkflowToYAML:
                     "steps": [
                         {
                             "name": "Test Step 2",
-                            "uses": "test_uses",
+                            "uses": "test_uses@v0.0.1",
                             "with": {},
                             "run": "echo",
                         }
@@ -136,6 +140,7 @@ class TestWorkflowToYAML:
             },
         )
 
+    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
     def test_checkout_then_build(self):
         workflow = WorkflowRequest(
             name="Deploy to GitHub Pages",
@@ -163,7 +168,9 @@ class TestWorkflowToYAML:
                         ),
                         StepRequest(
                             name="Deploy",
-                            inputs=None,
+                            inputs={
+                                "folder": "dist",
+                            },
                             id="JamesIves/github-pages-deploy-action",
                         ),
                     ],
@@ -185,7 +192,7 @@ class TestWorkflowToYAML:
                     "steps": [
                         {
                             "name": "Checkout",
-                            "uses": "actions/checkout",
+                            "uses": "actions/checkout@v4.2.0",
                             "with": None,
                             "run": None,
                         },
@@ -197,8 +204,10 @@ class TestWorkflowToYAML:
                         },
                         {
                             "name": "Deploy",
-                            "uses": "JamesIves/github-pages-deploy-action",
-                            "with": None,
+                            "uses": "JamesIves/github-pages-deploy-action@v4.6.8",
+                            "with": {
+                                "folder": "dist",
+                            },
                             "run": None,
                         },
                     ],

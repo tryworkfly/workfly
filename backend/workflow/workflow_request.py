@@ -1,6 +1,8 @@
 from pydantic import BaseModel, field_validator, ValidationInfo
 from typing import Literal
 
+from db.step import StepClient
+
 
 class TriggerRequest(BaseModel):
     event: str
