@@ -16,12 +16,13 @@ export type ActionCardNode = Node<Step>;
 type updateHandler = (k: string, v: string | number | boolean) => void;
 
 export default function ActionCardNode(props: NodeProps<ActionCardNode>) {
-   const { updateNodeData } = useReactFlow();
+   const { updateNodeData, getNode } = useReactFlow();
    const updateAction = useCallback((k: string, v: string | number | boolean) => {
-     console.log("temp");
+     console.log(props.id)
+     let currNode = getNode(props.id) as ActionCardNode;
      updateNodeData(props.id, {
-       ...props.data,
-       inputs: props.data.inputs.map((input) => {
+       ...currNode?.data,
+       inputs: currNode?.data.inputs.map((input) => {
          if (input.name === k) {
            return { ...input, value: v };
          }

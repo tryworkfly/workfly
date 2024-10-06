@@ -21,7 +21,6 @@ import {
 import "@xyflow/react/dist/style.css";
 import { ActionCardNode } from "@/components/ActionCard";
 import { JobCardNode } from "@/components/JobCard";
-import { TriggerCardNode } from "@/components/TriggerCard";
 import nodeTypes from "@/components/NodeTypes";
 import Sidebar from "@/components/sidebar";
 
@@ -96,9 +95,16 @@ function Playground() {
       const node = getNode(currNodeId);
       if (node === undefined)
         return;
-      wfRequest.jobs[0].steps.push(node.data as Step);
+      let data = node.data as Step;
+      if (data.inputs.some((v) => v.required && v.value === undefined)) return;
+      wfRequest.jobs[0].steps.push({
+        name: data.name,
+        id: data.id,
+        inputs: data.inputs.reduce((obj, s) => ({...obj, [s.name]: s.value}), {})
+      });
       if (!graph.has(currNodeId))
           break;
+      currNodeId = graph.get(currNodeId);
     }
     fetch("http://localhost:8000/workflows", {
       method: "POST",

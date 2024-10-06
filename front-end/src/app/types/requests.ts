@@ -11,11 +11,13 @@ type TriggerRequest = {
   config: Record<string, any>;
 };
 
-type JobRequest = Job;
+type JobRequest = {
+  name: string,
+  steps: StepRequest[]
+};
 
 type StepRequest = {
   name: string;
-  inputs: Record<string, any> | undefined;
-  id: string | undefined;
-  run: string | undefined;
+  inputs: Record<string, any>;
+  id: string;
 };

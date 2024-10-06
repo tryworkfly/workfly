@@ -1,3 +1,4 @@
+'use client';
 import { useCallback } from "react";
 import { ActionCard } from "./ActionCard";
 import { JobCard } from "./JobCard";

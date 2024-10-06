@@ -13,4 +13,5 @@ type StepInput = {
   type: string;
   required: boolean;
   description: string;
+  value?: string | boolean | number;
 };
