@@ -1,8 +1,10 @@
 "use client";
-import { useCallback } from "react";
+import { ChangeEvent, useCallback } from "react";
 import { ActionCard } from "./nodes/ActionNode";
 // import { JobCard } from "./JobCard";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "./ui/textarea";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,9 +16,11 @@ import {
 type SidebarProps = {
   defaults: Step[] | undefined;
   handleDrop: (x: number, y: number, type: string, data: Step | Job) => void;
+  handleGenerate: (prompt: string) => void;
 };
 
-export default function Sidebar({ defaults, handleDrop }: SidebarProps) {
+export default function Sidebar({ defaults, handleDrop, handleGenerate }: SidebarProps) {
+  const [prompt, setPrompt] = useState("");
   const onActionDrop = useCallback((e: React.DragEvent, data: Step) => {
     handleDrop(e.clientX, e.clientY, "actionNode", data);
   }, []);
@@ -53,6 +57,8 @@ export default function Sidebar({ defaults, handleDrop }: SidebarProps) {
             </div>
           ))}
       </CardContent>
+      <Textarea placeholder="Auto generate your workflow" onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}/>
+      <Button onClick={() => {handleGenerate(prompt)}} >Generate</Button>
       {/* <div
         draggable
         onDragOver={(e) => {

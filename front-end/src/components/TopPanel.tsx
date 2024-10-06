@@ -72,7 +72,7 @@ export default function TopPanel() {
         "tryworkfly",
         "gh-actions-test",
         `test-${Date.now()}`,
-        yaml
+        "yaml"
       );
 
       toast("Workflow processed successfully!", {
