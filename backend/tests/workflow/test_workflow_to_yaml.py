@@ -109,7 +109,7 @@ class TestWorkflowToYAML:
         self._assert_yaml_equal(
             yaml,
             workflow,
-            permissions={"contents": ["write", "read"]},
+            permissions={"contents": ["read", "write"]},
             on={"test_event": {}},
             jobs={
                 "test-job-request": {
