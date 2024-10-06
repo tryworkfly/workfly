@@ -6,7 +6,7 @@ export type JobCardNode = Node<Job>;
 
 export default function JobCardNode(props: any) {
   return (
-    <div>
+    <div className="w-full h-full">
       <Handle type="source" position={Position.Left} />
       <JobCard {...props.data} />
       <Handle type="target" position={Position.Right} />
@@ -16,7 +16,7 @@ export default function JobCardNode(props: any) {
 
 export function JobCard(data: Job) {
   return (
-    <div className="w-80 h-40 p-1 border-dashed border-blue-400 border-4">
+    <div className="min-w-80 min-h-40 h-full p-1 border-dashed border-blue-400 border-4">
       <Input type="text" placeholder={data.name} className="w-20" />
     </div>
   );

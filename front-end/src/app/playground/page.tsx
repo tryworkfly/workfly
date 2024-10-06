@@ -10,6 +10,12 @@ import {
   BackgroundVariant,
   Edge,
   Node,
+  useReactFlow,
+  ReactFlowProvider,
+  OnNodeDrag,
+  OnConnect,
+  Connection,
+
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
@@ -22,11 +28,21 @@ const initialNodes: Node[] = [];
 
 const initialEdges: Edge[] = [];
 
-export default function Playground() {
+export default function App() {
+   return (
+         <ReactFlowProvider>
+            <Playground />
+         </ReactFlowProvider>
+   )
+}
+
+function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const [possibleActions, setPossibleActions] = useState<Step[]>([]);
+  // const { getInterSectionNodes}
+  const { getIntersectingNodes, getZoom, getNodes } = useReactFlow();
    useEffect(() => {
       // fetch("/api/actions")
       //    .then((res) => res.json())
@@ -71,24 +87,41 @@ export default function Playground() {
       ]);
    }, []);
 
-  const onConnect = useCallback(
-    (params: any) => setEdges((eds) => addEdge(params, eds)),
+  const onConnect: OnConnect = useCallback(
+    // addEdge()
+    (params: Connection) =>
+      setEdges((eds) =>
+        addEdge(params, eds)
+      ),
     [setEdges]
   );
 
-  
+   const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
+      if (node.type === "jobNode")
+         return;
+      const intersectingNodes = getIntersectingNodes(node).filter((n) => n.type === "jobNode");
+      if (intersectingNodes.length === 0)
+         return;
+      setNodes((nodes) => nodes.map((n) => {
+         if (n.id === node.id)
+            return { ...n, parentId: intersectingNodes[0].id, extent: "parent", expandParent: true };
+         return n;
+      }));
+   }, []); 
 
-  const addAction = useCallback((x: number, y: number, type: string, data: Step | Job) => {
-   // console.log("X: ", x, "Y: ", y, "Action: ", actionType);
+  const addAction = useCallback(async (x: number, y: number, type: string, data: Step | Job) => {
    if (type === "actionNode") {
+     const newNode = {
+       id: Math.random().toString(),
+       type: "actionNode",
+       position: { x: x, y: y },
+       data: data,
+     };
+
      setNodes((nodes) =>
-       nodes.concat({
-         id: Math.random().toString(),
-         type: "actionNode",
-         position: { x, y },
-         data: data,
-       } as ActionCardNode)
+       nodes.concat(newNode as ActionCardNode)
      );
+     
    } else if (type === "jobNode") {
       console.log("Job Node");
       setNodes((nodes) =>
@@ -103,12 +136,14 @@ export default function Playground() {
   }, []);
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }} className="bg-[#CFE7FB]"
+    <div
+      style={{ width: "100vw", height: "100vh" }}
+      className="bg-[#CFE7FB]"
       onDragOver={(e) => {
         e.preventDefault();
       }}
-      >
-      <Sidebar defaults={possibleActions} handleDrop={addAction}/>
+    >
+      <Sidebar defaults={possibleActions} handleDrop={addAction} />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -116,6 +151,7 @@ export default function Playground() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeDragStop={onNodeDrag}
       >
         <Controls />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
