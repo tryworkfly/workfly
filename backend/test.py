@@ -17,14 +17,15 @@ workflow = WorkflowRequest(
             steps=[
                 StepRequest(
                     name="Checkout",
-                    inputs=None,
+                    inputs={},
                     id="actions/checkout",
                 ),
                 StepRequest(
                     name="Install and Build",
-                    inputs=None,
-                    id=None,
-                    run="npm ci\nnpm run build",
+                    inputs={
+                        "code": "npm ci\nnpm run build",
+                    },
+                    id="custom/code",
                 ),
                 StepRequest(
                     name="Deploy",
@@ -49,14 +50,15 @@ workflow = WorkflowRequest(
             steps=[
                 StepRequest(
                     name="Checkout",
-                    inputs=None,
+                    inputs={},
                     id="actions/checkout",
                 ),
                 StepRequest(
                     name="Run Tests",
-                    inputs=None,
-                    id=None,
-                    run="npm run test",
+                    inputs={
+                        "code": "npm run test",
+                    },
+                    id="custom/code",
                 ),
             ],
         )

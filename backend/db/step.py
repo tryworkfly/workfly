@@ -39,6 +39,31 @@ _steps["custom/code"] = Step(
     ],
 )
 
+_steps["TejasvOnly/random-rickroll"] = Step(
+    name="Random Rickroll",
+    id="TejasvOnly/random-rickroll",
+    version="v1.0.0",
+    category="Utility",
+    description="Rickroll someone",
+    inputs=[
+        StepInput(
+            name="percentage",
+            type="string",
+            required=True,
+            description="The percentage of people to rickroll (0-100)",
+        )
+    ],
+)
+
+_steps["super-linter/super-linter"] = Step(
+    name="Super Linter",
+    id="super-linter/super-linter",
+    version="v7.1.0",
+    category="Utility",
+    description="Lint your code",
+    inputs=[],
+)
+
 _steps["actions/checkout"] = Step(
     name="Checkout",
     id="actions/checkout",
