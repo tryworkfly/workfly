@@ -18,10 +18,13 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
+import useSWR from "swr";
+import fetcher from "@/lib/fetcher";
 import { ActionCardNode } from "@/components/ActionCard";
 import { JobCardNode } from "@/components/JobCard";
-import nodeTypes from "@/components/NodeTypes";
-import Sidebar from "@/components/sidebar";
+import nodeTypes from "./nodeTypes";
+import Sidebar from "@/components/Sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const initialNodes: Node[] = [
   {
@@ -37,9 +40,11 @@ const initialEdges: Edge[] = [];
 
 export default function App() {
   return (
-    <ReactFlowProvider>
-      <Playground />
-    </ReactFlowProvider>
+    <TooltipProvider delayDuration={0}>
+      <ReactFlowProvider>
+        <Playground />
+      </ReactFlowProvider>
+    </TooltipProvider>
   );
 }
 
@@ -47,15 +52,10 @@ function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const [possibleActions, setPossibleActions] = useState<Step[]>([]);
-  // const { getInterSectionNodes}
+  const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
+
   const { getIntersectingNodes, getZoom, getNodes, getEdges, getNode } =
     useReactFlow();
-  useEffect(() => {
-    fetch("http://localhost:8000/steps")
-      .then((res) => res.json())
-      .then((data) => setPossibleActions(data));
-  }, []);
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -107,14 +107,13 @@ function Playground() {
       if (!graph.has(currNodeId)) break;
       currNodeId = graph.get(currNodeId);
     }
-    const rsp = await fetch("http://localhost:8000/workflows", {
+    const data = await fetcher("/workflows", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(wfRequest),
     });
-    const data = await rsp.json();
     console.log(data);
   };
 
