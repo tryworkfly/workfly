@@ -135,3 +135,73 @@ class TestWorkflowToYAML:
                 },
             },
         )
+
+    def test_checkout_then_build(self):
+        workflow = WorkflowRequest(
+            name="Deploy to GitHub Pages",
+            runName="Deploy to GitHub Pages",
+            permissions={
+                "contents": "read",
+                "pages": "write",
+                "id-token": "write",
+            },
+            trigger=[TriggerRequest(event="push", config={"branches": ["main"]})],
+            jobs=[
+                JobRequest(
+                    name="Build and Deploy",
+                    steps=[
+                        StepRequest(
+                            name="Checkout",
+                            inputs=None,
+                            id="actions/checkout",
+                        ),
+                        StepRequest(
+                            name="Install and Build",
+                            inputs=None,
+                            id=None,
+                            run="npm ci\nnpm run build",
+                        ),
+                        StepRequest(
+                            name="Deploy",
+                            inputs=None,
+                            id="JamesIves/github-pages-deploy-action",
+                        ),
+                    ],
+                )
+            ],
+            jobEdges=[],
+        )
+
+        yaml = WorkflowToYAML.to_yaml(workflow)
+        self._assert_yaml_equal(
+            yaml,
+            workflow,
+            on={"push": {"branches": ["main"]}},
+            jobs={
+                "build-and-deploy": {
+                    "name": "Build and Deploy",
+                    "runs-on": ["linux"],
+                    "needs": [],
+                    "steps": [
+                        {
+                            "name": "Checkout",
+                            "uses": "actions/checkout",
+                            "with": None,
+                            "run": None,
+                        },
+                        {
+                            "name": "Install and Build",
+                            "uses": None,
+                            "with": None,
+                            "run": "npm ci\nnpm run build",
+                        },
+                        {
+                            "name": "Deploy",
+                            "uses": "JamesIves/github-pages-deploy-action",
+                            "with": None,
+                            "run": None,
+                        },
+                    ],
+                }
+            },
+        )

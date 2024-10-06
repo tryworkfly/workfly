@@ -55,7 +55,7 @@ class WorkflowToYAML:
         return {trigger.event: trigger.config for trigger in triggers}
 
     @staticmethod
-    def _make_job_id(job_name: str) -> str:
+    def _make_job_id(job_name: str):
         return job_name.lower().replace(" ", "-")
 
     @staticmethod
@@ -84,7 +84,7 @@ class WorkflowToYAML:
 
     @staticmethod
     def _steps_to_yaml(steps: list[StepRequest]) -> list[StepActionYAML]:
-        # validate step based on "uses"
+        # TODO validate step based on "uses"
         return [
             {
                 "name": step.name,

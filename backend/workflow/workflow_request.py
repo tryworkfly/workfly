@@ -9,7 +9,7 @@ class TriggerRequest(BaseModel):
 
 class StepRequest(BaseModel):
     name: str
-    inputs: dict
+    inputs: dict | None
     id: str | None  # corresponding to a certain Action in DB
     run: str | None = None
     """Command to run at given step"""
