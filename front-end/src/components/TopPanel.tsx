@@ -41,6 +41,7 @@ export default function TopPanel() {
 
     let currNodeId = graph.get("trigger");
     while (true) {
+      console.log(currNodeId)
       const node = getNode(currNodeId);
       if (node === undefined) return;
       let data = node.data as Step;
@@ -72,7 +73,7 @@ export default function TopPanel() {
         "tryworkfly",
         "gh-actions-test",
         `test-${Date.now()}`,
-        "yaml"
+        yaml as string
       );
 
       toast("Workflow processed successfully!", {

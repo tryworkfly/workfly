@@ -23,7 +23,7 @@ import fetcher from "@/lib/fetcher";
 import type { ActionNode } from "@/components/nodes/ActionNode";
 import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
 
