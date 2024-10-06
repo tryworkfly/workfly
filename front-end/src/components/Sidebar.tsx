@@ -1,6 +1,6 @@
 "use client";
 import { useCallback } from "react";
-import { ActionCard } from "./ActionCard";
+import { ActionCard } from "./nodes/ActionNode";
 // import { JobCard } from "./JobCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,14 +14,9 @@ import {
 type SidebarProps = {
   defaults: Step[] | undefined;
   handleDrop: (x: number, y: number, type: string, data: Step | Job) => void;
-  handleSubmit: () => void;
 };
 
-export default function Sidebar({
-  defaults,
-  handleDrop,
-  handleSubmit,
-}: SidebarProps) {
+export default function Sidebar({ defaults, handleDrop }: SidebarProps) {
   const onActionDrop = useCallback((e: React.DragEvent, data: Step) => {
     handleDrop(e.clientX, e.clientY, "actionNode", data);
   }, []);
@@ -58,9 +53,6 @@ export default function Sidebar({
             </div>
           ))}
       </CardContent>
-      <CardFooter className="w-full flex justify-center">
-        <Button onClick={handleSubmit}>Submit</Button>
-      </CardFooter>
       {/* <div
         draggable
         onDragOver={(e) => {

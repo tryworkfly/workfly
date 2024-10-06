@@ -22,5 +22,4 @@ export async function writeWorkflowFile(
       email: "bot@workfly.dev",
     },
   });
-  console.log(rsp);
 }

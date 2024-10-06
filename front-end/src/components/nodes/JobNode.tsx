@@ -4,9 +4,9 @@ import { Handle, Position } from "@xyflow/react";
 import { Input } from "@/components/ui/input";
 import { Node } from "@xyflow/react";
 
-export type JobCardNode = Node<Job>;
+export type JobNode = Node<Job>;
 
-export default function JobCardNode(props: any) {
+export default function JobNode(props: any) {
   return (
     <div className="w-full h-full">
       <Handle type="source" position={Position.Left} />

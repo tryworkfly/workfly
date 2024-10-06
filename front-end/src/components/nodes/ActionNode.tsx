@@ -16,21 +16,21 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Separator } from "./ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+} from "../ui/card";
+import { Separator } from "../ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 
-export type ActionCardNode = Node<Step>;
+export type ActionNode = Node<Step>;
 
 type updateHandler = (k: string, v: string | number | boolean) => void;
 
-export default function ActionCardNode(props: NodeProps<ActionCardNode>) {
+export default function ActionNode(props: NodeProps<ActionNode>) {
   const { updateNodeData, getNode } = useReactFlow();
   const updateAction = useCallback(
     (k: string, v: string | number | boolean) => {
       console.log(props.id);
-      let currNode = getNode(props.id) as ActionCardNode;
+      let currNode = getNode(props.id) as ActionNode;
       updateNodeData(props.id, {
         ...currNode?.data,
         inputs: currNode?.data.inputs.map((input) => {
@@ -143,7 +143,10 @@ function ActionInput({
       <div className="grid grid-cols-3 items-center gap-4">
         <Tooltip>
           <Label htmlFor={props.name} className="flex items-center gap-1.5">
-            {props.name.charAt(0).toUpperCase() + props.name.slice(1)}
+            <p>
+              {props.name.charAt(0).toUpperCase() + props.name.slice(1)}
+              {props.required && <span className="text-red-500">*</span>}
+            </p>
             <TooltipTrigger>
               <QuestionMarkCircledIcon className="w-3 h-3 text-gray-500" />
             </TooltipTrigger>

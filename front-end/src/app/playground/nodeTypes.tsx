@@ -1,11 +1,11 @@
-import ActionCardNode from "@/components/ActionCard";
+import ActionNode from "@/components/nodes/ActionNode";
 // import JobCardNode from "./JobCard";
-import TriggerCardNode from "@/components/TriggerCard";
+import TriggerNode from "@/components/nodes/TriggerNode";
 
 const nodeTypes = {
-  actionNode: ActionCardNode,
+  actionNode: ActionNode,
   // jobNode: JobCardNode,
-  triggerNode: TriggerCardNode,
+  triggerNode: TriggerNode,
 };
 
 export default nodeTypes;

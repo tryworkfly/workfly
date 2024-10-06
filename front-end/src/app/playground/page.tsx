@@ -20,11 +20,12 @@ import {
 import "@xyflow/react/dist/style.css";
 import useSWR from "swr";
 import fetcher from "@/lib/fetcher";
-import { ActionCardNode } from "@/components/ActionCard";
-import { JobCardNode } from "@/components/JobCard";
+import type { ActionNode } from "@/components/nodes/ActionNode";
+import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
 import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import TopPanel from "@/components/TopPanel";
 
 const initialNodes: Node[] = [
   {
@@ -53,69 +54,12 @@ function Playground() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
-
-  const { getIntersectingNodes, getZoom, getNodes, getEdges, getNode } =
-    useReactFlow();
+  const { getIntersectingNodes } = useReactFlow();
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
-
-  const onSubmit = async () => {
-    const nodes = getNodes();
-    const edges = getEdges();
-    let graph = new Map();
-    for (const e of edges) {
-      graph.set(e.target, e.source);
-    }
-
-    if (graph.size === 0) return;
-
-    let wfRequest: WorkflowRequest = {
-      name: "New workflow",
-      runName: "New workflow Runname",
-      trigger: [
-        {
-          event: "push",
-          config: {},
-        },
-      ],
-      jobs: [
-        {
-          name: "Main Job",
-          steps: [],
-        },
-      ],
-      jobEdges: [],
-    };
-
-    let currNodeId = graph.get("trigger");
-    while (true) {
-      const node = getNode(currNodeId);
-      if (node === undefined) return;
-      let data = node.data as Step;
-      if (data.inputs.some((v) => v.required && v.value === undefined)) return;
-      wfRequest.jobs[0].steps.push({
-        name: data.name,
-        id: data.id,
-        inputs: data.inputs.reduce(
-          (obj, s) => ({ ...obj, [s.name]: s.value }),
-          {}
-        ),
-      });
-      if (!graph.has(currNodeId)) break;
-      currNodeId = graph.get(currNodeId);
-    }
-    const data = await fetcher("/workflows", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(wfRequest),
-    });
-    console.log(data);
-  };
 
   const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
     if (node.type === "jobNode") return;
@@ -147,7 +91,7 @@ function Playground() {
           data: data,
         };
 
-        setNodes((nodes) => nodes.concat(newNode as ActionCardNode));
+        setNodes((nodes) => nodes.concat(newNode as ActionNode));
       } else if (type === "jobNode") {
         console.log("Job Node");
         setNodes((nodes) =>
@@ -156,7 +100,7 @@ function Playground() {
             type: "jobNode",
             position: { x, y },
             data: data,
-          } as JobCardNode)
+          } as JobNode)
         );
       }
     },
@@ -171,11 +115,8 @@ function Playground() {
         e.preventDefault();
       }}
     >
-      <Sidebar
-        defaults={possibleActions}
-        handleDrop={addAction}
-        handleSubmit={onSubmit}
-      />
+      <Sidebar defaults={possibleActions} handleDrop={addAction} />
+      <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
