@@ -23,7 +23,7 @@ import fetcher from "@/lib/fetcher";
 import type { ActionNode } from "@/components/nodes/ActionNode";
 import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
 
@@ -54,7 +54,7 @@ function Playground() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
-  const { getIntersectingNodes } = useReactFlow();
+  const { getIntersectingNodes, getNode } = useReactFlow();
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -107,6 +107,71 @@ function Playground() {
     []
   );
 
+  let newEdges: Edge[] = [];
+  const onGenerate = async (prompt: string) => {
+    if (prompt === "") return;
+    fetch("http://localhost:8000/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt: prompt }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setNodes((nds) => {
+          const triggerNode = getNode("trigger");
+          if (triggerNode === undefined) return nds;
+          let prevNode = triggerNode;
+          // console.log(typeof data.response);
+          // console.log(data.response);
+          // //console.log(data.response.map((action: string) => action));
+          // const newNodes: Node[] = [];
+          const newNodes = data.response.map((action: string) => {
+              let newNode: Node = {
+                id: Math.random().toString(),
+                type: "actionNode",
+                position: {
+                  x: 100 + prevNode.position.x,
+                  y: 120 + prevNode.position.y,
+                },
+                data: structuredClone((possibleActions as Step[]).find((step) => step.name === action)) as Step,
+              };
+              newEdges.push({
+                id: Math.random().toString(),
+                source: newNode.id,
+                target: prevNode.id,
+              });
+              prevNode = newNode;
+              return newNode;
+          });
+          // const newNodes = (possibleActions as Step[])
+          //   .filter((action) => data.response.includes(action.name))
+          //   .map((action, i) => {
+          //     let newNode = {
+          //       id: Math.random().toString(),
+          //       type: "actionNode",
+          //       position: {
+          //         x: 100 + prevNode.position.x,
+          //         y: 120 + prevNode.position.y,
+          //       },
+          //       data: structuredClone(action),
+          //     };
+          //     newEdges.push({
+          //       id: Math.random().toString(),
+          //       source: newNode.id,
+          //       target: prevNode.id,
+          //     });
+          //     prevNode = newNode;
+          //     return newNode;
+          //   });
+
+          return [triggerNode, ...newNodes];
+        });
+        setEdges((eds) => newEdges);
+      });
+  };
+
   return (
     <div
       style={{ width: "100vw", height: "100vh" }}
@@ -115,7 +180,7 @@ function Playground() {
         e.preventDefault();
       }}
     >
-      <Sidebar defaults={possibleActions} handleDrop={addAction} />
+      <Sidebar defaults={possibleActions} handleDrop={addAction} handleGenerate={onGenerate}/>
       <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
