@@ -3,18 +3,10 @@ import uvicorn
 import dotenv
 
 
-def load_config():
-    config = {
-        **dotenv.dotenv_values(".env"),
-        **os.environ,
-    }
-    return config
-
-
 if __name__ == "__main__":
-    config = load_config()
-    port = config.get("PORT") or 8000
-    env = config.get("ENV", "production")
+    dotenv.load_dotenv()
+    port = os.getenv("PORT") or 8000
+    env = os.getenv("ENV", "production")
 
     uvicorn.run(
         app="app.server:app",
