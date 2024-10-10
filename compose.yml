@@ -17,11 +17,12 @@ services:
   frontend:
     build:
       context: ./front-end
+      target: dev
+    command: npm run dev
     ports:
       - "3000:3000"
     env_file:
       - ./front-end/.env.local
-      - ./front-end/.env.docker
     develop:
       watch:
         - path: ./front-end

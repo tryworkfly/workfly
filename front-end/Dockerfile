@@ -1,6 +1,6 @@
-FROM node:20 AS builder-image
+FROM node:20 AS prod-builder
 
-WORKDIR /home/docker/
+WORKDIR /home/docker/code
 
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -8,20 +8,35 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-FROM node:20-slim AS runner-image
 
+FROM node:20-slim AS prod-runner
+
+WORKDIR /home/docker/code
 RUN useradd --create-home docker
-COPY --from=builder-image /home/docker/.next /home/docker/.next
-COPY --from=builder-image /home/docker/node_modules /home/docker/node_modules
-COPY --from=builder-image /home/docker/package.json /home/docker/package-lock.json /home/docker/
+
+COPY --from=prod-builder /home/docker/code/node_modules ./
+COPY --from=prod-builder /home/docker/code/package.json /home/docker/code/package-lock.json ./
+COPY --from=prod-builder /home/docker/code/.next ./.next
 
 USER docker
-RUN mkdir /home/docker/code
-WORKDIR /home/docker/code
-
 EXPOSE 3000
 
-
-# /dev/shm is mapped to shared memory and should be used for gunicorn heartbeat
-# this will improve performance and avoid random freezes
 CMD ["npm", "run", "start"]
+
+
+FROM node:20 AS dev
+
+WORKDIR /home/docker/code
+RUN useradd --create-home docker
+
+COPY package.json package-lock.json ./
+RUN npm i
+
+COPY . .
+
+RUN chown -R docker:docker /home/docker/code
+
+USER docker
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
