@@ -50,7 +50,7 @@ class WorkflowRequest(BaseModel):
 class WorkflowAIRequest(BaseModel):
     prompt: str
 
-class WorkflowAIReponse(BaseModel):
+class WorkflowAIResponse(BaseModel):
     actions: list[str]
 
 

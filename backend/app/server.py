@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from ai.ai_client import AIClient
 from db.step import StepClient
 from workflow.workflow_request import (
-    WorkflowAIReponse,
+    WorkflowAIResponse,
     WorkflowAIRequest,
     WorkflowRequest,
     WorkflowResponse,
@@ -44,11 +44,11 @@ def create_app():
         )
 
     @app.post("/ai")
-    async def create_ai_workflow(workflow: WorkflowAIRequest) -> WorkflowAIReponse:
+    async def create_ai_workflow(workflow: WorkflowAIRequest) -> WorkflowAIResponse:
         ai_client = AIClient()
         actions = ai_client.generate_workflow_actions(workflow.prompt)
 
-        return WorkflowAIReponse(
+        return WorkflowAIResponse(
             actions=actions,
         )
 

@@ -12,8 +12,8 @@ type TriggerRequest = {
 };
 
 type JobRequest = {
-  name: string,
-  steps: StepRequest[]
+  name: string;
+  steps: StepRequest[];
 };
 
 type StepRequest = {

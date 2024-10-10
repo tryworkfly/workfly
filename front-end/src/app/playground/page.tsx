@@ -26,6 +26,8 @@ import nodeTypes from "./nodeTypes";
 import Sidebar from "@/components/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
+import { WorkflowAIResponse } from "../../types/ai";
+import { generateId } from "@/lib/utils";
 
 const initialNodes: Node[] = [
   {
@@ -85,102 +87,111 @@ function Playground() {
     async (x: number, y: number, type: string, data: Step | Job) => {
       if (type === "actionNode") {
         const newNode = {
-          id: Math.random().toString(),
+          id: generateId(),
           type: "actionNode",
           position: { x: x, y: y },
           data: data,
         };
 
         setNodes((nodes) => nodes.concat(newNode as ActionNode));
-      } else if (type === "jobNode") {
-        console.log("Job Node");
-        setNodes((nodes) =>
-          nodes.concat({
-            id: Math.random().toString(),
-            type: "jobNode",
-            position: { x, y },
-            data: data,
-          } as JobNode)
-        );
       }
+      // else if (type === "jobNode") {
+      //   console.log("Job Node");
+      //   setNodes((nodes) =>
+      //     nodes.concat({
+      //       id: generateId(),
+      //       type: "jobNode",
+      //       position: { x, y },
+      //       data: data,
+      //     } as JobNode)
+      //   );
+      // }
     },
     []
   );
 
   let newEdges: Edge[] = [];
   const onGenerate = async (prompt: string) => {
-    if (prompt === "") return;
-    fetch("http://localhost:8000/ai", {
+    if (prompt === "" || possibleActions === undefined) return;
+    const data = await fetcher<WorkflowAIResponse>("/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ prompt: prompt }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setNodes((nds) => {
-          const triggerNode = getNode("trigger");
-          if (triggerNode === undefined) return nds;
-          let prevNode = triggerNode;
-          // console.log(typeof data.response);
-          // console.log(data.response);
-          // //console.log(data.response.map((action: string) => action));
-          // const newNodes: Node[] = [];
-          const newNodes = data.response.map((action: string) => {
-              let newNode: Node = {
-                id: Math.random().toString(),
-                type: "actionNode",
-                position: {
-                  x: 100 + prevNode.position.x,
-                  y: 120 + prevNode.position.y,
-                },
-                data: structuredClone((possibleActions as Step[]).find((step) => step.name === action)) as Step,
-              };
-              newEdges.push({
-                id: Math.random().toString(),
-                source: newNode.id,
-                target: prevNode.id,
-              });
-              prevNode = newNode;
-              return newNode;
-          });
-          // const newNodes = (possibleActions as Step[])
-          //   .filter((action) => data.response.includes(action.name))
-          //   .map((action, i) => {
-          //     let newNode = {
-          //       id: Math.random().toString(),
-          //       type: "actionNode",
-          //       position: {
-          //         x: 100 + prevNode.position.x,
-          //         y: 120 + prevNode.position.y,
-          //       },
-          //       data: structuredClone(action),
-          //     };
-          //     newEdges.push({
-          //       id: Math.random().toString(),
-          //       source: newNode.id,
-          //       target: prevNode.id,
-          //     });
-          //     prevNode = newNode;
-          //     return newNode;
-          //   });
+    });
+    console.log(data);
+    setNodes((prev) => {
+      const triggerNode = getNode("trigger");
+      if (triggerNode === undefined) return prev;
 
-          return [triggerNode, ...newNodes];
-        });
-        setEdges((eds) => newEdges);
-      });
+      try {
+        return data.actions.reduce(
+          (prev, curr) => {
+            const prevNode = prev.at(-1);
+            if (prevNode === undefined) throw new Error("Prev node not found");
+
+            const step = possibleActions.find((step) => step.name === curr);
+            if (step === undefined) throw new Error("Step not found");
+
+            const newNode: ActionNode = {
+              id: generateId(),
+              type: "actionNode",
+              position: {
+                x: 100 + prevNode.position.x,
+                y: 120 + prevNode.position.y,
+              },
+              data: structuredClone(step),
+            };
+            newEdges.push({
+              id: generateId(),
+              source: newNode.id,
+              target: prevNode.id,
+            });
+            return [...prev, newNode];
+          },
+          [triggerNode]
+        );
+      } catch (e) {
+        return prev;
+      }
+      // const newNodes = (possibleActions as Step[])
+      //   .filter((action) => data.response.includes(action.name))
+      //   .map((action, i) => {
+      //     let newNode = {
+      //       id: generateId(),
+      //       type: "actionNode",
+      //       position: {
+      //         x: 100 + prevNode.position.x,
+      //         y: 120 + prevNode.position.y,
+      //       },
+      //       data: structuredClone(action),
+      //     };
+      //     newEdges.push({
+      //       id: generateId(),
+      //       source: newNode.id,
+      //       target: prevNode.id,
+      //     });
+      //     prevNode = newNode;
+      //     return newNode;
+      //   });
+    });
+    setEdges(newEdges);
   };
 
   return (
     <div
       style={{ width: "100vw", height: "100vh" }}
-      className="bg-[#CFE7FB]"
+      className="bg-[#ecf4fb]"
       onDragOver={(e) => {
         e.preventDefault();
       }}
     >
-      <Sidebar defaults={possibleActions} handleDrop={addAction} handleGenerate={onGenerate}/>
+      <Sidebar
+        defaults={possibleActions}
+        handleDrop={addAction}
+        handleGenerate={onGenerate}
+      />
       <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
