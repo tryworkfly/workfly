@@ -1,0 +1,29 @@
+name: workfly
+
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    develop:
+      watch:
+        - path: ./backend
+          action: sync+restart
+          target: /home/docker/code
+
+  frontend:
+    build:
+      context: ./front-end
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./front-end/.env.local
+      - ./front-end/.env.docker
+    develop:
+      watch:
+        - path: ./front-end
+          action: sync
+          target: /home/docker/code
