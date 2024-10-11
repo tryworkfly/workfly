@@ -23,7 +23,7 @@ import fetcher from "@/lib/fetcher";
 import type { ActionNode } from "@/components/nodes/ActionNode";
 import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
 import { WorkflowAIResponse } from "../../types/ai";
@@ -120,7 +120,6 @@ function Playground() {
       },
       body: JSON.stringify({ prompt: prompt }),
     });
-    console.log(data);
     setNodes((prev) => {
       const triggerNode = getNode("trigger");
       if (triggerNode === undefined) return prev;
@@ -138,8 +137,8 @@ function Playground() {
               id: generateId(),
               type: "actionNode",
               position: {
-                x: 100 + prevNode.position.x,
-                y: 120 + prevNode.position.y,
+                x: 300 + prevNode.position.x,
+                y: prevNode.position.y,
               },
               data: structuredClone(step),
             };

@@ -23,13 +23,12 @@ import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 
 export type ActionNode = Node<Step>;
 
-type updateHandler = (k: string, v: string | number | boolean) => void;
+type UpdateHandler = (k: string, v: string | number | boolean) => void;
 
 export default function ActionNode(props: NodeProps<ActionNode>) {
   const { updateNodeData, getNode } = useReactFlow();
   const updateAction = useCallback(
     (k: string, v: string | number | boolean) => {
-      console.log(props.id);
       let currNode = getNode(props.id) as ActionNode;
       updateNodeData(props.id, {
         ...currNode?.data,
@@ -54,7 +53,7 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
 
 type ActionCardProps = {
   data: Step;
-  handler?: updateHandler;
+  handler?: UpdateHandler;
   compact?: boolean;
 };
 
@@ -124,7 +123,7 @@ function ActionInput({
   handler,
 }: {
   props: StepInput;
-  handler?: updateHandler;
+  handler?: UpdateHandler;
 }) {
   let dftVal: string | number;
   switch (props.type) {

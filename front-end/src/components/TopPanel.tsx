@@ -5,6 +5,7 @@ import { useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { writeWorkflowFile } from "@/lib/githubWriter";
+import type { TriggerCardNode } from "./nodes/TriggerNode";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
@@ -18,15 +19,23 @@ export default function TopPanel() {
     for (const e of edges) {
       graph.set(e.target, e.source);
     }
+    // check if all nodes are connected
+    if (graph.size === 0) {
+      toast("No workflow found!", {
+        description: "Please add a trigger node to the graph.",
+      });
+      setSubmitting(false);
+      return;
+    }
 
-    if (graph.size === 0) return;
+    const triggerNode = graph.get("trigger");
 
     let wfRequest: WorkflowRequest = {
       name: "New workflow",
       runName: "New workflow Runname",
       trigger: [
         {
-          event: "push",
+          event: (getNode("trigger") as TriggerCardNode).data.trigger,
           config: {},
         },
       ],
@@ -39,12 +48,11 @@ export default function TopPanel() {
       jobEdges: [],
     };
 
-    let currNodeId = graph.get("trigger");
+    let currNodeId = triggerNode;
     while (true) {
-      console.log(currNodeId)
       const node = getNode(currNodeId);
-      if (node === undefined) return;
-      let data = node.data as Step;
+      if (node === undefined) break;
+      const data = node.data as Step;
       if (data.inputs.some((v) => v.required && v.value === undefined)) return;
       wfRequest.jobs[0].steps.push({
         name: data.name,
@@ -54,9 +62,10 @@ export default function TopPanel() {
           {}
         ),
       });
-      if (!graph.has(currNodeId)) break;
       currNodeId = graph.get(currNodeId);
     }
+    console.log(wfRequest);
+
     const data = await fetcher("/workflows", {
       method: "POST",
       headers: {
@@ -69,12 +78,12 @@ export default function TopPanel() {
       const yaml = data["workflowYaml"];
       console.log(yaml);
 
-      await writeWorkflowFile(
-        "tryworkfly",
-        "gh-actions-test",
-        `test-${Date.now()}`,
-        yaml as string
-      );
+      // await writeWorkflowFile(
+      //   "tryworkfly",
+      //   "gh-actions-test",
+      //   `test-${Date.now()}`,
+      //   yaml as string
+      // );
 
       toast("Workflow processed successfully!", {
         description: "Workflow was successfully added to repository.",
