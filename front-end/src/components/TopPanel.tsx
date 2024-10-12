@@ -15,20 +15,18 @@ export default function TopPanel() {
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
-    let graph = new Map();
+    let nodeIdGraph = new Map();
     for (const e of edges) {
-      graph.set(e.target, e.source);
+      nodeIdGraph.set(e.target, e.source);
     }
     // check if all nodes are connected
-    if (graph.size === 0) {
+    if (nodeIdGraph.size === 0) {
       toast("No workflow found!", {
         description: "Please add a trigger node to the graph.",
       });
       setSubmitting(false);
       return;
     }
-
-    const triggerNode = graph.get("trigger");
 
     let wfRequest: WorkflowRequest = {
       name: "New workflow",
@@ -48,12 +46,26 @@ export default function TopPanel() {
       jobEdges: [],
     };
 
-    let currNodeId = triggerNode;
-    while (true) {
+    let currNodeId = nodeIdGraph.get("trigger");
+    while (currNodeId !== undefined) {
       const node = getNode(currNodeId);
-      if (node === undefined) break;
+      if (node === undefined) {
+        // this should never happen
+        toast("Invalid workflow!", {
+          description: "Please check your workflow and try again.",
+        });
+        setSubmitting(false);
+        return;
+      }
+
       const data = node.data as Step;
-      if (data.inputs.some((v) => v.required && v.value === undefined)) return;
+      if (data.inputs.some((v) => v.required && v.value === undefined)) {
+        toast("Missing required inputs!", {
+          description: "Please fill in all required inputs.",
+        });
+        setSubmitting(false);
+        return;
+      }
       wfRequest.jobs[0].steps.push({
         name: data.name,
         id: data.id,
@@ -62,9 +74,8 @@ export default function TopPanel() {
           {}
         ),
       });
-      currNodeId = graph.get(currNodeId);
+      currNodeId = nodeIdGraph.get(currNodeId);
     }
-    console.log(wfRequest);
 
     const data = await fetcher("/workflows", {
       method: "POST",
