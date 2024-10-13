@@ -15,6 +15,7 @@ import {
   OnNodeDrag,
   OnConnect,
   Connection,
+  SelectionMode,
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
@@ -143,26 +144,6 @@ function Playground() {
       } catch (e) {
         return prev;
       }
-      // const newNodes = (possibleActions as Step[])
-      //   .filter((action) => data.response.includes(action.name))
-      //   .map((action, i) => {
-      //     let newNode = {
-      //       id: generateId(),
-      //       type: "actionNode",
-      //       position: {
-      //         x: 100 + prevNode.position.x,
-      //         y: 120 + prevNode.position.y,
-      //       },
-      //       data: structuredClone(action),
-      //     };
-      //     newEdges.push({
-      //       id: generateId(),
-      //       source: newNode.id,
-      //       target: prevNode.id,
-      //     });
-      //     prevNode = newNode;
-      //     return newNode;
-      //   });
     });
     setEdges(newEdges);
   };
@@ -189,6 +170,11 @@ function Playground() {
         onConnect={onConnect}
         onNodeDragStop={onNodeDrag}
         proOptions={{ hideAttribution: true }}
+        panOnScroll
+        panOnDrag={[1, 2]}
+        selectionOnDrag
+        zoomOnDoubleClick={false}
+        selectionMode={SelectionMode.Partial}
       >
         <TopPanel />
         <Controls position="bottom-right" />
