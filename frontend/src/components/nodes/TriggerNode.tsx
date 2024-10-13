@@ -7,6 +7,7 @@ import {
   SelectItem,
   SelectContent,
 } from "../ui/select";
+import { Card, CardTitle, CardHeader, CardContent } from "../ui/card";
 
 export type TriggerCardNode = Node<{ trigger: string }>;
 
@@ -23,18 +24,23 @@ export default function TriggerNode({ id, data }: NodeProps<TriggerCardNode>) {
   };
 
   return (
-    <div className="w-52 h-28 p-4 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center">
-      <Select value={data.trigger} onValueChange={onTriggerChange}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {triggerEvents.map(([label, value]) => (
-            <SelectItem value={value}>{label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <Card className="w-52 flex flex-col rounded-[3rem]">
+      <CardHeader>
+        <CardTitle>Start</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Select value={data.trigger} onValueChange={onTriggerChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {triggerEvents.map(([label, value]) => (
+              <SelectItem value={value}>{label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </CardContent>
       <Handle type="target" position={Position.Right} />
-    </div>
+    </Card>
   );
 }

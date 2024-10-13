@@ -57,8 +57,8 @@ export default function Sidebar({ defaults, handleDrop, handleGenerate }: Sideba
             </div>
           ))}
       </CardContent>
-      <Textarea placeholder="Auto generate your workflow" onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt(e.target.value)}/>
-      <Button onClick={() => {handleGenerate(prompt)}} >Generate</Button>
+      <Textarea placeholder="Auto generate your workflow" onChange={(e) => setPrompt(e.target.value)}/>
+      <Button onClick={() => {handleGenerate(prompt)}}>Generate</Button>
       {/* <div
         draggable
         onDragOver={(e) => {
