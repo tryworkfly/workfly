@@ -151,7 +151,7 @@ function Playground() {
   return (
     <div
       style={{ width: "100vw", height: "100vh" }}
-      className="bg-[#ecf4fb]"
+      className="bg-muted"
       onDragOver={(e) => {
         e.preventDefault();
       }}

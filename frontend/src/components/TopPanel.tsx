@@ -119,8 +119,8 @@ export default function TopPanel() {
   };
 
   return (
-    <Panel position="top-center" className="w-full p-4" style={{ margin: 0 }}>
-      <Card className="flex px-3 py-2 justify-between items-center">
+    <Panel position="top-center" className="w-full" style={{ margin: 0 }}>
+      <div className="flex px-3 py-1.5 bg-background justify-between items-center">
         <div className="flex items-center gap-2">
           <Image src={logo} alt="logo" width={48} height={48} />
           <h1 className="text-xl font-bold text-primary">Workfly</h1>
@@ -151,7 +151,7 @@ export default function TopPanel() {
           generatedWorkflow={generatedWorkflow}
           setGeneratedWorkflow={setGeneratedWorkflow}
         />
-      </Card>
+      </div>
     </Panel>
   );
 }
