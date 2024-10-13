@@ -16,15 +16,15 @@ services:
 
   frontend:
     build:
-      context: ./front-end
+      context: ./frontend
       target: dev
     command: npm run dev
     ports:
       - "3000:3000"
     env_file:
-      - ./front-end/.env.local
+      - ./frontend/.env.local
     develop:
       watch:
-        - path: ./front-end
+        - path: ./frontend
           action: sync
           target: /home/docker/code
