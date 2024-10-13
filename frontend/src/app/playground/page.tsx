@@ -57,7 +57,7 @@ function Playground() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
   const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
-  const { getIntersectingNodes, getNode } = useReactFlow();
+  const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow();
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -90,7 +90,7 @@ function Playground() {
         const newNode = {
           id: generateId(),
           type: "actionNode",
-          position: { x: x, y: y },
+          position: screenToFlowPosition({x: x, y: y}),
           data: data,
         };
 
