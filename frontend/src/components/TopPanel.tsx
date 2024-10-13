@@ -11,10 +11,14 @@ import Image from "next/image";
 import { Input } from "./ui/input";
 import { PlaneTakeoff, Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
+  const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
+    null
+  );
   const { getNodes, getEdges, getNode } = useReactFlow();
 
   const onSubmit = async () => {
@@ -93,7 +97,7 @@ export default function TopPanel() {
 
     if (typeof data == "object" && data && "workflowYaml" in data) {
       const yaml = data["workflowYaml"];
-      console.log(yaml);
+      setGeneratedWorkflow(yaml as string);
 
       // await writeWorkflowFile(
       //   "tryworkfly",
@@ -124,10 +128,13 @@ export default function TopPanel() {
         <Input
           value={workflowName}
           onChange={(e) => setWorkflowName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.target.blur();
+          }}
           className="w-60 text-center border-none shadow-none font-semibold"
         />
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <Button
               onClick={onSubmit}
               disabled={submitting}
@@ -139,6 +146,11 @@ export default function TopPanel() {
           </TooltipTrigger>
           <TooltipContent>Submit workflow</TooltipContent>
         </Tooltip>
+        <GeneratedWorkflowDialog
+          workflowName={workflowName}
+          generatedWorkflow={generatedWorkflow}
+          setGeneratedWorkflow={setGeneratedWorkflow}
+        />
       </Card>
     </Panel>
   );
