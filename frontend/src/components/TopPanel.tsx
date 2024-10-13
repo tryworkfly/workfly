@@ -9,6 +9,8 @@ import type { TriggerCardNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
 import Image from "next/image";
 import { Input } from "./ui/input";
+import { PlaneTakeoff, Send } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
@@ -124,9 +126,19 @@ export default function TopPanel() {
           onChange={(e) => setWorkflowName(e.target.value)}
           className="w-60 text-center border-none shadow-none font-semibold"
         />
-        <Button onClick={onSubmit} disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit Workflow!"}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button
+              onClick={onSubmit}
+              disabled={submitting}
+              className="font-bold"
+            >
+              {submitting ? "Taking off..." : "Fly"}
+              <Send className="w-4 h-4 ml-2" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Submit workflow</TooltipContent>
+        </Tooltip>
       </Card>
     </Panel>
   );
