@@ -34,7 +34,7 @@ const initialNodes: Node[] = [
     id: "trigger",
     type: "triggerNode",
     position: { x: 500, y: 300 },
-    data: { label: "On Push" },
+    data: { trigger: "push" },
     deletable: false,
   },
 ];
@@ -95,17 +95,6 @@ function Playground() {
 
         setNodes((nodes) => nodes.concat(newNode as ActionNode));
       }
-      // else if (type === "jobNode") {
-      //   console.log("Job Node");
-      //   setNodes((nodes) =>
-      //     nodes.concat({
-      //       id: generateId(),
-      //       type: "jobNode",
-      //       position: { x, y },
-      //       data: data,
-      //     } as JobNode)
-      //   );
-      // }
     },
     []
   );
