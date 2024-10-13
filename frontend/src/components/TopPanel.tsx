@@ -1,14 +1,18 @@
 import fetcher from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { useReactFlow } from "@xyflow/react";
+import { Panel, useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { writeWorkflowFile } from "@/lib/githubWriter";
 import type { TriggerCardNode } from "./nodes/TriggerNode";
+import logo from "@/assets/logo.png";
+import Image from "next/image";
+import { Input } from "./ui/input";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
+  const [workflowName, setWorkflowName] = useState("My New Workflow");
   const { getNodes, getEdges, getNode } = useReactFlow();
 
   const onSubmit = async () => {
@@ -29,8 +33,8 @@ export default function TopPanel() {
     }
 
     let wfRequest: WorkflowRequest = {
-      name: "New workflow",
-      runName: "New workflow Runname",
+      name: workflowName,
+      runName: workflowName,
       trigger: [
         {
           event: (getNode("trigger") as TriggerCardNode).data.trigger,
@@ -109,10 +113,21 @@ export default function TopPanel() {
   };
 
   return (
-    <Card className="absolute top-4 right-4 z-10">
-      <Button onClick={onSubmit} disabled={submitting}>
-        {submitting ? "Submitting..." : "Submit Workflow!"}
-      </Button>
-    </Card>
+    <Panel position="top-center" className="w-full p-4" style={{ margin: 0 }}>
+      <Card className="flex px-3 py-2 justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Image src={logo} alt="logo" width={48} height={48} />
+          <h1 className="text-xl font-bold text-primary">Workfly</h1>
+        </div>
+        <Input
+          value={workflowName}
+          onChange={(e) => setWorkflowName(e.target.value)}
+          className="w-60 text-center border-none shadow-none font-semibold"
+        />
+        <Button onClick={onSubmit} disabled={submitting}>
+          {submitting ? "Submitting..." : "Submit Workflow!"}
+        </Button>
+      </Card>
+    </Panel>
   );
 }

@@ -31,7 +31,7 @@ export default function Sidebar({ defaults, handleDrop, handleGenerate }: Sideba
 
   return (
     <Card
-      className="flex flex-col gap-4 p-4 absolute inset-y-0 my-auto ml-4 w-1/4 h-5/6 z-10"
+      className="flex flex-col gap-4 p-4 absolute bottom-6 my-auto ml-4 w-1/4 h-4/5 z-10"
       onDragOver={(e) => {
         e.preventDefault();
       }}

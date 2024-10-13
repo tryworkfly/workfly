@@ -191,7 +191,6 @@ function Playground() {
         handleDrop={addAction}
         handleGenerate={onGenerate}
       />
-      <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -200,8 +199,10 @@ function Playground() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={onNodeDrag}
+        proOptions={{ hideAttribution: true }}
       >
-        <Controls />
+        <TopPanel />
+        <Controls position="bottom-right" />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
       </ReactFlow>
     </div>
