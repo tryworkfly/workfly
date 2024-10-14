@@ -172,15 +172,12 @@ function Playground() {
   return (
     <div
       style={{ width: "100vw", height: "100vh" }}
-      className="bg-muted"
+      className="flex flex-col bg-muted"
       onDragOver={(e) => {
         e.preventDefault();
       }}
     >
-      <Sidebar
-        defaults={possibleActions}
-        handleGenerate={onGenerate}
-      />
+      <TopPanel />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -203,7 +200,10 @@ function Playground() {
         zoomOnDoubleClick={false}
         selectionMode={SelectionMode.Partial}
       >
-        <TopPanel />
+        <Sidebar
+          defaults={possibleActions}
+          handleGenerate={onGenerate}
+        />
         <Controls position="bottom-right" />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
       </ReactFlow>

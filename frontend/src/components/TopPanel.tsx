@@ -119,39 +119,37 @@ export default function TopPanel() {
   };
 
   return (
-    <Panel position="top-center" className="w-full" style={{ margin: 0 }}>
-      <div className="flex px-3 py-1.5 bg-background justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Image src={logo} alt="logo" width={48} height={48} />
-          <h1 className="text-xl font-bold text-primary">Workfly</h1>
-        </div>
-        <Input
-          value={workflowName}
-          onChange={(e) => setWorkflowName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") e.target.blur();
-          }}
-          className="w-60 text-center border-none shadow-none font-semibold"
-        />
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              onClick={onSubmit}
-              disabled={submitting}
-              className="font-bold"
-            >
-              {submitting ? "Taking off..." : "Fly"}
-              <Send className="w-4 h-4 ml-2" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Submit workflow</TooltipContent>
-        </Tooltip>
-        <GeneratedWorkflowDialog
-          workflowName={workflowName}
-          generatedWorkflow={generatedWorkflow}
-          setGeneratedWorkflow={setGeneratedWorkflow}
-        />
+    <div className="flex px-3 py-1.5 border-b-2 border-b-border bg-background justify-between items-center">
+      <div className="flex items-center gap-2">
+        <Image src={logo} alt="logo" width={48} height={48} />
+        <h1 className="text-xl font-bold text-primary">Workfly</h1>
       </div>
-    </Panel>
+      <Input
+        value={workflowName}
+        onChange={(e) => setWorkflowName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") e.target.blur();
+        }}
+        className="w-60 text-center border-none shadow-none font-semibold"
+      />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="font-bold"
+          >
+            {submitting ? "Taking off..." : "Fly"}
+            <Send className="w-4 h-4 ml-2" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Submit workflow</TooltipContent>
+      </Tooltip>
+      <GeneratedWorkflowDialog
+        workflowName={workflowName}
+        generatedWorkflow={generatedWorkflow}
+        setGeneratedWorkflow={setGeneratedWorkflow}
+      />
+    </div>
   );
 }
