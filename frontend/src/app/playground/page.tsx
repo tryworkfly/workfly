@@ -30,6 +30,7 @@ import TopPanel from "@/components/TopPanel";
 import { WorkflowAIResponse } from "../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
+import { toast } from "sonner";
 
 const initialNodes: Node[] = [
   {
@@ -58,11 +59,15 @@ export default function App() {
 function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectStartPos, setSelectStartPos] = useState<{x: number, y: number} | null>(null);
+  const [selectStartPos, setSelectStartPos] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [droppedType, _] = useDragAndDrop();
 
   const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
-  const { getIntersectingNodes, getNode, screenToFlowPosition } = useReactFlow();
+  const { getIntersectingNodes, getNode, screenToFlowPosition } =
+    useReactFlow();
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -71,20 +76,23 @@ function Playground() {
 
   const onSelectionStart = useCallback(
     (e: React.MouseEvent) => {
-      setSelectStartPos(screenToFlowPosition({x: e.clientX, y: e.clientY}));
-    }, 
+      setSelectStartPos(screenToFlowPosition({ x: e.clientX, y: e.clientY }));
+    },
     [setSelectStartPos]
-  )
+  );
 
   const onSelectionEnd = useCallback(
     (e: React.MouseEvent) => {
-      if (selectStartPos === null)
-          return;
-      const pos = screenToFlowPosition({x: e.clientX, y: e.clientY});
-      console.log(`Width: ${Math.abs(pos.x - selectStartPos?.x)}      Height: ${Math.abs(pos.y - selectStartPos?.y)}`)
-    }, 
+      if (selectStartPos === null) return;
+      const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+      console.log(
+        `Width: ${Math.abs(pos.x - selectStartPos?.x)}      Height: ${Math.abs(
+          pos.y - selectStartPos?.y
+        )}`
+      );
+    },
     [setSelectStartPos]
-  )
+  );
 
   const onNodeDrag: OnNodeDrag = useCallback((event, node) => {
     if (node.type === "jobNode") return;
@@ -106,22 +114,22 @@ function Playground() {
     );
   }, []);
 
-  const onDrop = useCallback((e: React.DragEvent) => {
-    if (possibleActions === undefined)
-        return;
-    const action = possibleActions.filter((a) => a.name === droppedType);
-    if (action.length === 0)
-        return;
-    const newNode = {
-      id: generateId(),
-      type: "actionNode",
-      position: screenToFlowPosition({ x: e.clientX, y: e.clientY }),
-      data: structuredClone(action[0]),
-    };
-    setNodes((nodes) => nodes.concat(newNode as ActionNode));
-  }, [setNodes, possibleActions, droppedType]);
+  const onDrop = useCallback(
+    (e: React.DragEvent) => {
+      if (possibleActions === undefined) return;
+      const action = possibleActions.filter((a) => a.name === droppedType);
+      if (action.length === 0) return;
+      const newNode = {
+        id: generateId(),
+        type: "actionNode",
+        position: screenToFlowPosition({ x: e.clientX, y: e.clientY }),
+        data: structuredClone(action[0]),
+      };
+      setNodes((nodes) => nodes.concat(newNode as ActionNode));
+    },
+    [setNodes, possibleActions, droppedType]
+  );
 
-  let newEdges: Edge[] = [];
   const onGenerate = async (prompt: string) => {
     if (prompt === "" || possibleActions === undefined) return;
     const data = await fetcher<WorkflowAIResponse>("/ai", {
@@ -131,42 +139,45 @@ function Playground() {
       },
       body: JSON.stringify({ prompt: prompt }),
     });
-    setNodes((prev) => {
-      const triggerNode = getNode("trigger");
-      if (triggerNode === undefined) return prev;
 
-      try {
-        return data.actions.reduce(
-          (prev, curr) => {
-            const prevNode = prev.at(-1);
-            if (prevNode === undefined) throw new Error("Prev node not found");
+    const newEdges: Edge[] = [];
+    const triggerNode = getNode("trigger");
+    if (triggerNode === undefined) return; // pass
 
-            const step = possibleActions.find((step) => step.name === curr);
-            if (step === undefined) throw new Error("Step not found");
+    try {
+      const newNodes = data.actions.reduce(
+        (prev, curr) => {
+          const prevNode = prev.at(-1);
+          if (prevNode === undefined) throw new Error("Prev node not found.");
 
-            const newNode: ActionNode = {
-              id: generateId(),
-              type: "actionNode",
-              position: {
-                x: 300 + prevNode.position.x,
-                y: prevNode.position.y,
-              },
-              data: structuredClone(step),
-            };
-            newEdges.push({
-              id: generateId(),
-              source: newNode.id,
-              target: prevNode.id,
-            });
-            return [...prev, newNode];
-          },
-          [triggerNode]
-        );
-      } catch (e) {
-        return prev;
-      }
-    });
-    setEdges(newEdges);
+          const step = possibleActions.find((step) => step.name === curr);
+          if (step === undefined) throw new Error("Step not found.");
+
+          const newNode: ActionNode = {
+            id: generateId(),
+            type: "actionNode",
+            position: {
+              x: 300 + prevNode.position.x,
+              y: prevNode.position.y,
+            },
+            data: structuredClone(step),
+          };
+          newEdges.push({
+            id: generateId(),
+            source: newNode.id,
+            target: prevNode.id,
+          });
+          return [...prev, newNode];
+        },
+        [triggerNode]
+      );
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } catch (e) {
+      toast("Error generating workflow", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      });
+    }
   };
 
   return (
@@ -186,13 +197,10 @@ function Playground() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={onNodeDrag}
-
         onDrop={onDrop}
-
         onSelectionStart={onSelectionStart}
         onSelectionChange={() => console.log("selecting")}
         onSelectionEnd={onSelectionEnd}
-
         proOptions={{ hideAttribution: true }}
         panOnScroll
         panOnDrag={[1, 2]}
@@ -200,10 +208,7 @@ function Playground() {
         zoomOnDoubleClick={false}
         selectionMode={SelectionMode.Partial}
       >
-        <Sidebar
-          defaults={possibleActions}
-          handleGenerate={onGenerate}
-        />
+        <Sidebar defaults={possibleActions} handleGenerate={onGenerate} />
         <Controls position="bottom-right" />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
       </ReactFlow>

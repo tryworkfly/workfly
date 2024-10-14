@@ -25,12 +25,14 @@ export default function GeneratedWorkflowDialog({
       open={generatedWorkflow !== null}
       onOpenChange={() => setGeneratedWorkflow(null)}
     >
-      <DialogContent>
+      <DialogContent className="flex flex-col w-fit max-w-[70dvw]">
         <DialogHeader>
           <DialogTitle>Generated Workflow for {workflowName}:</DialogTitle>
         </DialogHeader>
         <DialogDescription>
-          <pre className="bg-gray-100 p-4 rounded-md">{generatedWorkflow}</pre>
+          <pre className="bg-gray-100 p-4 rounded-md overflow-x-scroll">
+            {generatedWorkflow}
+          </pre>
         </DialogDescription>
         <div className="flex gap-2">
           <Button

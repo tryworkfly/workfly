@@ -1,7 +1,6 @@
 import fetcher from "@/lib/fetcher";
 import { Button } from "./ui/button";
-import { Card } from "./ui/card";
-import { Panel, useReactFlow } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { writeWorkflowFile } from "@/lib/githubWriter";
@@ -9,7 +8,7 @@ import type { TriggerCardNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
 import Image from "next/image";
 import { Input } from "./ui/input";
-import { PlaneTakeoff, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 
@@ -29,6 +28,9 @@ export default function TopPanel() {
     for (const e of edges) {
       nodeIdGraph.set(e.target, e.source);
     }
+    console.log(nodes);
+    console.log(edges);
+    console.log(nodeIdGraph);
     // check if all nodes are connected
     if (nodeIdGraph.size === 0) {
       toast("No workflow found!", {
@@ -128,7 +130,9 @@ export default function TopPanel() {
         value={workflowName}
         onChange={(e) => setWorkflowName(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") e.target.blur();
+          if (e.key === "Enter" && e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.blur();
+          }
         }}
         className="w-60 text-center border-none shadow-none font-semibold"
       />

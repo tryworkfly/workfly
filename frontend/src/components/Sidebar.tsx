@@ -17,14 +17,61 @@ import { Panel } from "@xyflow/react";
 import { BotMessageSquare, Plus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
+function StepsTab({ defaults }: { defaults: Step[] | undefined }) {
+  const [_, setDroppedType] = useDragAndDrop();
+
+  return (
+    <CardContent className="px-3 flex flex-col gap-y-4 items-center overflow-y-scroll">
+      {defaults &&
+        defaults.map((step, index) => (
+          <div
+            className="w-full"
+            draggable
+            onDragOver={(e) => {
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+            }}
+            onDragStart={(e) => setDroppedType(step.name)}
+          >
+            <ActionCard key={index} data={step} compact />
+          </div>
+        ))}
+    </CardContent>
+  );
+}
+
+function ChatTab({
+  handleGenerate,
+}: {
+  handleGenerate: (prompt: string) => void;
+}) {
+  const [prompt, setPrompt] = useState("");
+
+  return (
+    <CardContent className="px-3 flex flex-col gap-2 w-72">
+      <Textarea
+        placeholder="Auto generate your workflow..."
+        onChange={(e) => setPrompt(e.target.value)}
+      />
+      <Button
+        onClick={() => {
+          handleGenerate(prompt);
+        }}
+      >
+        Generate
+      </Button>
+    </CardContent>
+  );
+}
+
 type SidebarProps = {
   defaults: Step[] | undefined;
   handleGenerate: (prompt: string) => void;
 };
 
 export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
-  const [prompt, setPrompt] = useState("");
-  const [_, setDroppedType] = useDragAndDrop();
   const [activeTab, setActiveTab] = useState<number | null>(null);
 
   const handleTabClick = (i: number) => {
@@ -40,51 +87,18 @@ export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
       name: "Steps",
       icon: Plus,
       tooltip: "Add new step",
-      content: (
-        <CardContent className="px-3 flex flex-col gap-y-4 items-center overflow-y-scroll">
-          {defaults &&
-            defaults.map((step, index) => (
-              <div
-                className="w-full"
-                draggable
-                onDragOver={(e) => {
-                  e.preventDefault();
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                }}
-                onDragStart={(e) => setDroppedType(step.name)}
-              >
-                <ActionCard key={index} data={step} compact />
-              </div>
-            ))}
-        </CardContent>
-      ),
+      content: <StepsTab defaults={defaults} />,
     },
     {
       name: "Chat with AI!",
       icon: BotMessageSquare,
       tooltip: "Chat with AI!",
-      content: (
-        <CardContent className="px-3 flex flex-col gap-2 w-72">
-          <Textarea
-            placeholder="Auto generate your workflow..."
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-          <Button
-            onClick={() => {
-              handleGenerate(prompt);
-            }}
-          >
-            Generate
-          </Button>
-        </CardContent>
-      ),
+      content: <ChatTab handleGenerate={handleGenerate} />,
     },
   ];
 
   return (
-    <Panel position="top-left" className={activeTab !== null ? "h-5/6" : ""}>
+    <Panel position="top-left" className={activeTab !== null ? "h-[90%]" : ""}>
       <Card className="flex h-full">
         <div className="flex flex-col p-2 gap-2">
           {tabs.map((tab, i) => (
