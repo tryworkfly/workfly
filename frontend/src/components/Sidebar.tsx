@@ -12,22 +12,16 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import { useDragAndDrop } from "@/lib/DragNDropContext";
 
 type SidebarProps = {
   defaults: Step[] | undefined;
-  handleDrop: (x: number, y: number, type: string, data: Step | Job) => void;
   handleGenerate: (prompt: string) => void;
 };
 
-export default function Sidebar({ defaults, handleDrop, handleGenerate }: SidebarProps) {
+export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
   const [prompt, setPrompt] = useState("");
-  const onActionDrop = useCallback((e: React.DragEvent, data: Step) => {
-    handleDrop(e.clientX, e.clientY, "actionNode", data);
-  }, []);
-
-  // const onJobDrop = useCallback((e: React.DragEvent) => {
-  //   props.handleDrop(e.clientX, e.clientY, "jobNode", { name: "Job #1", steps: [] });
-  // }, []);
+  const [_, setDroppedType] = useDragAndDrop();
 
   return (
     <Card
@@ -51,7 +45,7 @@ export default function Sidebar({ defaults, handleDrop, handleGenerate }: Sideba
               onDrop={(e) => {
                 e.preventDefault();
               }}
-              onDragEnd={(e) => onActionDrop(e, structuredClone(step))}
+              onDragStart={(e) => setDroppedType(step.name)}
             >
               <ActionCard key={index} data={step} compact />
             </div>
@@ -59,18 +53,6 @@ export default function Sidebar({ defaults, handleDrop, handleGenerate }: Sideba
       </CardContent>
       <Textarea placeholder="Auto generate your workflow" onChange={(e) => setPrompt(e.target.value)}/>
       <Button onClick={() => {handleGenerate(prompt)}}>Generate</Button>
-      {/* <div
-        draggable
-        onDragOver={(e) => {
-          e.preventDefault();
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-        }}
-        onDragEnd={(e) => onJobDrop(e)}
-      >
-        <JobCard name="Job #1" steps={[]}/>
-      </div> */}
     </Card>
   );
 }
