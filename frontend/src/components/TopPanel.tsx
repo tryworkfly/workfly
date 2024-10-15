@@ -125,10 +125,6 @@ export default function TopPanel() {
     if (typeof data == "object" && data && "workflowYaml" in data) {
       const yaml = data["workflowYaml"];
       setGeneratedWorkflow(yaml as string);
-
-      toast("Workflow processed successfully!", {
-        description: "Workflow was successfully added to repository.",
-      });
     } else {
       toast("Error processing workflow", {
         description: "Please try again.",

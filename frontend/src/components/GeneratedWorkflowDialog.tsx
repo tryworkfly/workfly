@@ -32,6 +32,9 @@ export default function GeneratedWorkflowDialog({
       workflowName.toLowerCase().replace(/ /g, "_"),
       generatedWorkflow as string
     );
+    toast.success("Added to GitHub", {
+      description: "Check your repository to see the workflow.",
+    });
   };
 
   return (

@@ -31,6 +31,7 @@ import { WorkflowAIResponse } from "../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import { toast } from "sonner";
+import useSteps from "@/hooks/useSteps";
 
 const initialNodes: Node[] = [
   {
@@ -64,8 +65,8 @@ function Playground() {
     y: number;
   } | null>(null);
   const [droppedType, _] = useDragAndDrop();
+  const { steps: allSteps } = useSteps();
 
-  const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
   const {
     getIntersectingNodes,
     getNode,
@@ -123,8 +124,8 @@ function Playground() {
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
-      if (possibleActions === undefined) return;
-      const action = possibleActions.filter((a) => a.name === droppedType);
+      if (allSteps === undefined) return;
+      const action = allSteps.filter((a) => a.name === droppedType);
       if (action.length === 0) return;
       const newNode = {
         id: generateId(),
@@ -134,58 +135,8 @@ function Playground() {
       };
       setNodes((nodes) => nodes.concat(newNode as ActionNode));
     },
-    [setNodes, possibleActions, droppedType]
+    [setNodes, allSteps, droppedType]
   );
-
-  const onGenerate = async (prompt: string) => {
-    if (prompt === "" || possibleActions === undefined) return;
-    const data = await fetcher<WorkflowAIResponse>("/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt: prompt }),
-    });
-
-    const newEdges: Edge[] = [];
-    const triggerNode = getNode("trigger");
-    if (triggerNode === undefined) return; // pass
-
-    try {
-      const newNodes = data.actions.reduce(
-        (prev, curr) => {
-          const prevNode = prev.at(-1);
-          if (prevNode === undefined) throw new Error("Prev node not found.");
-
-          const step = possibleActions.find((step) => step.name === curr);
-          if (step === undefined) throw new Error("Step not found.");
-
-          const newNode: ActionNode = {
-            id: generateId(),
-            type: "actionNode",
-            position: {
-              x: 300 + prevNode.position.x,
-              y: prevNode.position.y,
-            },
-            data: structuredClone(step),
-          };
-          newEdges.push({
-            id: generateId(),
-            source: newNode.id,
-            target: prevNode.id,
-          });
-          return [...prev, newNode];
-        },
-        [triggerNode]
-      );
-      setNodes(newNodes);
-      setEdges(newEdges);
-    } catch (e) {
-      toast("Error generating workflow", {
-        description: e instanceof Error ? e.message : "Please try again.",
-      });
-    }
-  };
 
   return (
     <div
@@ -215,7 +166,7 @@ function Playground() {
         zoomOnDoubleClick={false}
         selectionMode={SelectionMode.Partial}
       >
-        <Sidebar defaults={possibleActions} handleGenerate={onGenerate} />
+        <Sidebar defaults={allSteps} />
         <Controls position="bottom-right" />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
       </ReactFlow>

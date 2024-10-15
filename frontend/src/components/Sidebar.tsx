@@ -1,21 +1,20 @@
 "use client";
 
-import { ActionCard } from "./nodes/ActionNode";
+import { ActionCard, ActionNode } from "./nodes/ActionNode";
 // import { JobCard } from "./JobCard";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "./ui/textarea";
 import { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useDragAndDrop } from "@/lib/DragNDropContext";
-import { Panel } from "@xyflow/react";
+import { Edge, Panel, useReactFlow } from "@xyflow/react";
 import { BotMessageSquare, Plus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { WorkflowAIResponse } from "@/types/ai";
+import fetcher from "@/lib/fetcher";
+import useSteps from "@/hooks/useSteps";
+import { generateId } from "@/lib/utils";
+import { toast } from "sonner";
 
 function StepsTab({ defaults }: { defaults: Step[] | undefined }) {
   const [_, setDroppedType] = useDragAndDrop();
@@ -42,25 +41,81 @@ function StepsTab({ defaults }: { defaults: Step[] | undefined }) {
   );
 }
 
-function ChatTab({
-  handleGenerate,
-}: {
-  handleGenerate: (prompt: string) => void;
-}) {
+function ChatTab() {
   const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { steps: allSteps } = useSteps();
+  const { setNodes, setEdges, getNode } = useReactFlow();
+
+  const onGenerate = async () => {
+    if (prompt === "" || allSteps === undefined) return;
+    setIsGenerating(true);
+    const data = await fetcher<WorkflowAIResponse>("/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prompt: prompt }),
+    });
+
+    const newEdges: Edge[] = [];
+    const triggerNode = getNode("trigger");
+    if (triggerNode === undefined) {
+      setIsGenerating(false);
+      return; // pass
+    }
+
+    try {
+      const newNodes = data.actions.reduce(
+        (prev, curr) => {
+          const prevNode = prev.at(-1);
+          if (prevNode === undefined) throw new Error("Prev node not found.");
+
+          const step = allSteps.find((step) => step.name === curr);
+          if (step === undefined) throw new Error("Step not found.");
+
+          const newNode: ActionNode = {
+            id: generateId(),
+            type: "actionNode",
+            position: {
+              x: 300 + prevNode.position.x,
+              y: prevNode.position.y,
+            },
+            data: structuredClone(step),
+          };
+          newEdges.push({
+            id: generateId(),
+            source: newNode.id,
+            target: prevNode.id,
+          });
+          return [...prev, newNode];
+        },
+        [triggerNode]
+      );
+      setNodes(newNodes);
+      setEdges(newEdges);
+    } catch (e) {
+      toast.error("Error generating workflow", {
+        description: e instanceof Error ? e.message : "Please try again.",
+      });
+    }
+    setIsGenerating(false);
+  };
 
   return (
     <CardContent className="px-3 flex flex-col gap-2 w-72">
       <Textarea
         placeholder="Auto generate your workflow..."
         onChange={(e) => setPrompt(e.target.value)}
-      />
-      <Button
-        onClick={() => {
-          handleGenerate(prompt);
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onGenerate();
+          }
         }}
-      >
-        Generate
+      />
+      <Button onClick={onGenerate} disabled={isGenerating}>
+        {isGenerating ? "Generating..." : "Generate"}
       </Button>
     </CardContent>
   );
@@ -68,10 +123,9 @@ function ChatTab({
 
 type SidebarProps = {
   defaults: Step[] | undefined;
-  handleGenerate: (prompt: string) => void;
 };
 
-export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
+export default function Sidebar({ defaults }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<number | null>(null);
 
   const handleTabClick = (i: number) => {
@@ -93,7 +147,7 @@ export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
       name: "Chat with AI!",
       icon: BotMessageSquare,
       tooltip: "Chat with AI!",
-      content: <ChatTab handleGenerate={handleGenerate} />,
+      content: <ChatTab />,
     },
   ];
 
