@@ -16,13 +16,14 @@ import useSteps from "@/hooks/useSteps";
 import { generateId } from "@/lib/utils";
 import { toast } from "sonner";
 
-function StepsTab({ defaults }: { defaults: Step[] | undefined }) {
+function StepsTab() {
+  const { steps: allSteps } = useSteps();
   const [_, setDroppedType] = useDragAndDrop();
 
   return (
     <CardContent className="px-3 flex flex-col gap-y-4 items-center overflow-y-scroll">
-      {defaults &&
-        defaults.map((step, index) => (
+      {allSteps &&
+        allSteps.map((step, index) => (
           <div
             className="w-full"
             draggable
@@ -121,11 +122,7 @@ function ChatTab() {
   );
 }
 
-type SidebarProps = {
-  defaults: Step[] | undefined;
-};
-
-export default function Sidebar({ defaults }: SidebarProps) {
+export default function Sidebar() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
 
   const handleTabClick = (i: number) => {
@@ -141,7 +138,7 @@ export default function Sidebar({ defaults }: SidebarProps) {
       name: "Steps",
       icon: Plus,
       tooltip: "Add new step",
-      content: <StepsTab defaults={defaults} />,
+      content: <StepsTab />,
     },
     {
       name: "Chat with AI!",

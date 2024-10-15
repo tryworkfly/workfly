@@ -166,7 +166,7 @@ function Playground() {
         zoomOnDoubleClick={false}
         selectionMode={SelectionMode.Partial}
       >
-        <Sidebar defaults={allSteps} />
+        <Sidebar />
         <Controls position="bottom-right" />
         <Background color="#ccc" variant={BackgroundVariant.Cross} />
       </ReactFlow>
