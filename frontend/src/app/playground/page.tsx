@@ -66,12 +66,19 @@ function Playground() {
   const [droppedType, _] = useDragAndDrop();
 
   const { data: possibleActions } = useSWR<Step[]>("/steps", fetcher);
-  const { getIntersectingNodes, getNode, screenToFlowPosition } =
-    useReactFlow();
+  const {
+    getIntersectingNodes,
+    getNode,
+    updateNodeData,
+    screenToFlowPosition,
+  } = useReactFlow();
 
   const onConnect: OnConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    (params: Connection) => {
+      setEdges((eds) => addEdge(params, eds));
+      updateNodeData(params.source, { error: false });
+    },
+    [setEdges, updateNodeData]
   );
 
   const onSelectionStart = useCallback(

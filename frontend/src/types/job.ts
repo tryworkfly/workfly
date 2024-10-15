@@ -1,4 +1,4 @@
 type Job = {
-    name: string;
-    steps: Step[];
-}
+  name: string;
+  steps: Step[];
+};

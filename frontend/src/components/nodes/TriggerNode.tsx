@@ -8,15 +8,20 @@ import {
   SelectContent,
 } from "../ui/select";
 import { Card, CardTitle, CardHeader, CardContent } from "../ui/card";
+import { NodeData } from "@/types/nodes";
 
-export type TriggerCardNode = Node<{ trigger: string }>;
+export type TriggerCardNode = Node<NodeData & { trigger: string }>;
 
 const triggerEvents: [string, string][] = [
   ["On Push", "push"],
   ["On Pull Request", "on_pull_request"],
 ];
 
-export default function TriggerNode({ id, data }: NodeProps<TriggerCardNode>) {
+export default function TriggerNode({
+  id,
+  data,
+  selected,
+}: NodeProps<TriggerCardNode>) {
   const { updateNodeData } = useReactFlow();
 
   const onTriggerChange = (value: string) => {
@@ -24,7 +29,11 @@ export default function TriggerNode({ id, data }: NodeProps<TriggerCardNode>) {
   };
 
   return (
-    <Card className="w-52 flex flex-col rounded-[3rem]">
+    <Card
+      className={`w-52 flex flex-col rounded-[3rem] ${
+        selected ? "border-2 border-primary" : ""
+      }`}
+    >
       <CardHeader>
         <CardTitle>Start</CardTitle>
       </CardHeader>

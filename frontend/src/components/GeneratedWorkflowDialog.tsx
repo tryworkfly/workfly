@@ -6,10 +6,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import { GitHubLogoIcon } from "@radix-ui/react-icons";
 import { ClipboardIcon } from "lucide-react";
+import { writeWorkflowFile } from "@/lib/githubWriter";
 
 export default function GeneratedWorkflowDialog({
   workflowName,
@@ -20,12 +20,26 @@ export default function GeneratedWorkflowDialog({
   generatedWorkflow: string | null;
   setGeneratedWorkflow: (workflow: string | null) => void;
 }) {
+  const onCopyToClipboard = () => {
+    navigator.clipboard.writeText(generatedWorkflow!);
+    toast.success("Copied to clipboard");
+  };
+
+  const onAddToGitHub = async () => {
+    await writeWorkflowFile(
+      "tryworkfly",
+      "gh-actions-test",
+      workflowName.toLowerCase().replace(/ /g, "_"),
+      generatedWorkflow as string
+    );
+  };
+
   return (
     <Dialog
       open={generatedWorkflow !== null}
       onOpenChange={() => setGeneratedWorkflow(null)}
     >
-      <DialogContent className="flex flex-col w-fit max-w-[70dvw]">
+      <DialogContent className="flex flex-col rounded-lg w-[95dvw] lg:w-[50dvw] lg:max-w-[70dvw]">
         <DialogHeader>
           <DialogTitle>Generated Workflow for {workflowName}:</DialogTitle>
         </DialogHeader>
@@ -35,16 +49,11 @@ export default function GeneratedWorkflowDialog({
           </pre>
         </DialogDescription>
         <div className="flex gap-2">
-          <Button
-            onClick={() => {
-              navigator.clipboard.writeText(generatedWorkflow!);
-              toast.success("Copied to clipboard");
-            }}
-          >
+          <Button onClick={onCopyToClipboard}>
             Copy
             <ClipboardIcon className="w-4 h-4 ml-2" />
           </Button>
-          <Button variant="secondary">
+          <Button variant="secondary" onClick={onAddToGitHub}>
             Add to GitHub Repository <GitHubLogoIcon className="w-4 h-4 ml-2" />
           </Button>
         </div>

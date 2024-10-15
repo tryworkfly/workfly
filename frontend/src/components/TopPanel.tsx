@@ -3,7 +3,6 @@ import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { writeWorkflowFile } from "@/lib/githubWriter";
 import type { TriggerCardNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
 import Image from "next/image";
@@ -11,6 +10,7 @@ import { Input } from "./ui/input";
 import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
+import { ActionNode } from "./nodes/ActionNode";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
@@ -18,29 +18,46 @@ export default function TopPanel() {
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
   );
-  const { getNodes, getEdges, getNode } = useReactFlow();
+  const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
+    ActionNode | TriggerCardNode
+  >();
+
+  const setNodesError = (
+    ids: string[],
+    message: string,
+    description: string
+  ) => {
+    ids.forEach((id) => {
+      updateNodeData(id, { error: true });
+    });
+    toast(message, {
+      description,
+    });
+  };
 
   const onSubmit = async () => {
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
-    let nodeIdGraph = new Map();
-    for (const e of edges) {
-      nodeIdGraph.set(e.target, e.source);
-    }
-    console.log(nodes);
-    console.log(edges);
-    console.log(nodeIdGraph);
-    // check if all nodes are connected
-    if (nodeIdGraph.size === 0) {
-      toast("No workflow found!", {
-        description: "Please add a trigger node to the graph.",
-      });
+    let nodeConnectionGraph = new Map<string, string>(
+      edges.map((e) => [e.target, e.source])
+    );
+
+    const unconnectedNodes = nodes.filter(
+      (node) => nodeConnectionGraph.get(node.id) === undefined
+    );
+    // There should only be one unconnected node which is the last in the graph
+    if (unconnectedNodes.length > 1) {
+      setNodesError(
+        unconnectedNodes.map((node) => node.id),
+        "Missing nodes!",
+        "Please connect all nodes."
+      );
       setSubmitting(false);
       return;
     }
 
-    let wfRequest: WorkflowRequest = {
+    const wfRequest: WorkflowRequest = {
       name: workflowName,
       runName: workflowName,
       trigger: [
@@ -58,35 +75,43 @@ export default function TopPanel() {
       jobEdges: [],
     };
 
-    let currNodeId = nodeIdGraph.get("trigger");
+    let currNodeId = nodeConnectionGraph.get("trigger");
     while (currNodeId !== undefined) {
       const node = getNode(currNodeId);
       if (node === undefined) {
         // this should never happen
-        toast("Invalid workflow!", {
-          description: "Please check your workflow and try again.",
-        });
+        setNodesError(
+          [],
+          "Invalid workflow!",
+          "Please check your workflow and try again."
+        );
         setSubmitting(false);
         return;
       }
 
       const data = node.data as Step;
-      if (data.inputs.some((v) => v.required && v.value === undefined)) {
-        toast("Missing required inputs!", {
-          description: "Please fill in all required inputs.",
-        });
+      const unfilledRequiredInput = data.inputs.find(
+        (v) => v.required && v.value === undefined
+      );
+      if (unfilledRequiredInput) {
+        setNodesError(
+          [currNodeId],
+          "Missing required inputs!",
+          "Please fill in all required inputs."
+        );
         setSubmitting(false);
         return;
       }
-      wfRequest.jobs[0].steps.push({
+
+      const newStep: StepRequest = {
         name: data.name,
         id: data.id,
-        inputs: data.inputs.reduce(
-          (obj, s) => ({ ...obj, [s.name]: s.value }),
-          {}
+        inputs: Object.fromEntries(
+          data.inputs.map((input) => [input.name, input.value])
         ),
-      });
-      currNodeId = nodeIdGraph.get(currNodeId);
+      };
+      wfRequest.jobs[0].steps.push(newStep);
+      currNodeId = nodeConnectionGraph.get(currNodeId);
     }
 
     const data = await fetcher("/workflows", {
@@ -100,13 +125,6 @@ export default function TopPanel() {
     if (typeof data == "object" && data && "workflowYaml" in data) {
       const yaml = data["workflowYaml"];
       setGeneratedWorkflow(yaml as string);
-
-      // await writeWorkflowFile(
-      //   "tryworkfly",
-      //   "gh-actions-test",
-      //   `test-${Date.now()}`,
-      //   yaml as string
-      // );
 
       toast("Workflow processed successfully!", {
         description: "Workflow was successfully added to repository.",
@@ -124,7 +142,9 @@ export default function TopPanel() {
     <div className="flex px-3 py-1.5 border-b-2 border-b-border bg-background justify-between items-center">
       <div className="flex items-center gap-2">
         <Image src={logo} alt="logo" width={48} height={48} />
-        <h1 className="text-xl font-bold text-primary">Workfly</h1>
+        <h1 className="hidden lg:block text-xl font-bold text-primary">
+          Workfly
+        </h1>
       </div>
       <Input
         value={workflowName}
@@ -147,7 +167,7 @@ export default function TopPanel() {
             <Send className="w-4 h-4 ml-2" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Submit workflow</TooltipContent>
+        <TooltipContent>Submit workflow!</TooltipContent>
       </Tooltip>
       <GeneratedWorkflowDialog
         workflowName={workflowName}

@@ -20,8 +20,9 @@ import {
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
+import { NodeData } from "@/types/nodes";
 
-export type ActionNode = Node<Step>;
+export type ActionNode = Node<NodeData & Step>;
 
 type UpdateHandler = (k: string, v: string | number | boolean) => void;
 
@@ -38,6 +39,7 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
           }
           return input;
         }),
+        error: false,
       });
     },
     []
@@ -45,19 +47,29 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
   return (
     <div>
       <Handle type="source" position={Position.Left} />
-      <ActionCard data={props.data} handler={updateAction} />
+      <ActionCard
+        data={props.data}
+        handler={updateAction}
+        selected={props.selected}
+      />
       <Handle type="target" position={Position.Right} />
     </div>
   );
 }
 
 type ActionCardProps = {
-  data: Step;
+  data: NodeData & Step;
   handler?: UpdateHandler;
   compact?: boolean;
+  selected?: boolean;
 };
 
-export function ActionCard({ data, handler, compact }: ActionCardProps) {
+export function ActionCard({
+  data,
+  handler,
+  compact,
+  selected,
+}: ActionCardProps) {
   if (compact) {
     return (
       <Card className="w-full">
@@ -71,7 +83,11 @@ export function ActionCard({ data, handler, compact }: ActionCardProps) {
   }
 
   return (
-    <Card className="w-96">
+    <Card
+      className={`w-96 ${selected ? "border-2 border-primary" : ""} ${
+        data.error ? "border-2 border-red-500" : ""
+      }`}
+    >
       <CardHeader className="pb-3">
         <CardTitle>{data.name}</CardTitle>
         <CardDescription>{data.category}</CardDescription>
@@ -158,7 +174,7 @@ function ActionInput({
               id={props.name}
               defaultValue={dftVal}
               type={props.type}
-              className="col-span-2 h-8"
+              className="col-span-2 h-8 nodrag"
               onInput={(event: React.ChangeEvent<HTMLInputElement>) =>
                 handler && handler(props.name, event.target.value)
               }

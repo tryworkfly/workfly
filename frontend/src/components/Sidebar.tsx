@@ -99,8 +99,8 @@ export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
 
   return (
     <Panel position="top-left" className={activeTab !== null ? "h-[90%]" : ""}>
-      <Card className="flex h-full">
-        <div className="flex flex-col p-2 gap-2">
+      <Card className="flex h-full items-center">
+        <div className="flex flex-col p-2 gap-2 h-full">
           {tabs.map((tab, i) => (
             <Tooltip key={tab.name}>
               <TooltipTrigger asChild>
@@ -120,6 +120,7 @@ export default function Sidebar({ defaults, handleGenerate }: SidebarProps) {
             </Tooltip>
           ))}
         </div>
+        <div className="my-0 h-[95%] border-r border-r-border"></div>
         {activeTab !== null && (
           <div
             className="flex flex-col gap-4 p-4 h-full"
