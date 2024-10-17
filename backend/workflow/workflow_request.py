@@ -47,8 +47,10 @@ class WorkflowRequest(BaseModel):
             raise ValueError("At least one job is required")
         return v
 
+
 class WorkflowAIRequest(BaseModel):
     prompt: str
+
 
 class WorkflowAIResponse(BaseModel):
     actions: list[str]

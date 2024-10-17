@@ -46,6 +46,8 @@ fastapi[standard]==0.115.2
     # via -r requirements.in
 fastapi-cli[standard]==0.0.5
     # via fastapi
+greenlet==3.1.1
+    # via sqlalchemy
 h11==0.14.0
     # via
     #   httpcore
@@ -89,6 +91,7 @@ pydantic==2.9.2
     # via
     #   fastapi
     #   openai
+    #   sqlmodel
 pydantic-core==2.23.4
     # via pydantic
 pygments==2.18.0
@@ -116,6 +119,10 @@ sniffio==1.3.1
     #   anyio
     #   httpx
     #   openai
+sqlalchemy==2.0.36
+    # via sqlmodel
+sqlmodel==0.0.22
+    # via -r requirements.in
 starlette==0.40.0
     # via fastapi
 tqdm==4.66.5
@@ -128,6 +135,7 @@ typing-extensions==4.12.2
     #   openai
     #   pydantic
     #   pydantic-core
+    #   sqlalchemy
     #   typer
 tzdata==2024.2
     # via

@@ -1,29 +1,11 @@
-from dataclasses import dataclass, field
 from typing import OrderedDict
 
-
-@dataclass
-class StepInput:
-    name: str
-    type: str
-    required: bool
-    description: str
+from .model.step_definition import StepDefinition, StepInput
 
 
-@dataclass
-class Step:
-    name: str
-    id: str
-    version: str
-    category: str
-    description: str
-    inputs: list[StepInput]
-    required_permissions: dict[str, set[str]] = field(default_factory=dict)
+_steps: OrderedDict[str, StepDefinition] = OrderedDict()
 
-
-_steps: OrderedDict[str, Step] = OrderedDict()
-
-_steps["custom/code"] = Step(
+_steps["custom/code"] = StepDefinition(
     name="Run Code",
     id="custom/code",
     version="v1.0.0",
@@ -39,7 +21,7 @@ _steps["custom/code"] = Step(
     ],
 )
 
-_steps["TejasvOnly/random-rickroll"] = Step(
+_steps["TejasvOnly/random-rickroll"] = StepDefinition(
     name="Random Rickroll",
     id="TejasvOnly/random-rickroll",
     version="v1.0.0",
@@ -55,7 +37,7 @@ _steps["TejasvOnly/random-rickroll"] = Step(
     ],
 )
 
-_steps["super-linter/super-linter"] = Step(
+_steps["super-linter/super-linter"] = StepDefinition(
     name="Super Linter",
     id="super-linter/super-linter",
     version="v7.1.0",
@@ -64,7 +46,7 @@ _steps["super-linter/super-linter"] = Step(
     inputs=[],
 )
 
-_steps["actions/checkout"] = Step(
+_steps["actions/checkout"] = StepDefinition(
     name="Checkout",
     id="actions/checkout",
     version="v4.2.0",
@@ -85,7 +67,7 @@ _steps["actions/checkout"] = Step(
         ),
     ],
 )
-_steps["JamesIves/github-pages-deploy-action"] = Step(
+_steps["JamesIves/github-pages-deploy-action"] = StepDefinition(
     name="Deploy to GitHub Pages",
     id="JamesIves/github-pages-deploy-action",
     version="v4.6.8",
@@ -103,12 +85,12 @@ _steps["JamesIves/github-pages-deploy-action"] = Step(
 )
 
 
-class StepClient:
+class StepDefinitionClient:
     def __init__(self) -> None:
         pass
 
     def get_all(self):
         return list(_steps.values())
 
-    def get(self, id: str) -> Step | None:
+    def get(self, id: str) -> StepDefinition | None:
         return _steps.get(id)

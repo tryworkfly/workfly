@@ -1,7 +1,7 @@
 from typing import Any, Iterator, NotRequired, TypedDict
 import yaml
 
-from db.step import StepClient
+from db.step_definition import StepDefinitionClient
 from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
 
 StepActionYAML = TypedDict(
@@ -130,7 +130,7 @@ class WorkflowToYAML:
 
     @staticmethod
     def _validate_step_request(step_request: StepRequest):
-        step_db = StepClient()
+        step_db = StepDefinitionClient()
         step = step_db.get(step_request.id)
 
         if not step:
