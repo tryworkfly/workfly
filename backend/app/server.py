@@ -4,9 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from ai.ai_client import AIClient
-from db.model.step_definition import StepDefinition
-from db.model.workflow import WorkflowCreate, WorkflowPublic
-from db.client.step_definition import StepDefinitionClient
+from db.client import StepDefinitionClient, WorkflowClient
+from db.model import StepDefinition, WorkflowCreate, WorkflowPublic
 from workflow.workflow_request import (
     WorkflowAIResponse,
     WorkflowAIRequest,
@@ -45,37 +44,27 @@ def create_app():
     #         workflowYaml=workflow_yaml,
     #     )
 
+    @app.get("/workflows")
+    async def list_workflows() -> list[WorkflowPublic]:
+        workflow_client = WorkflowClient()
+        return workflow_client.get_all()
+
     @app.post("/workflows")
     async def create_workflow(workflow: WorkflowCreate) -> WorkflowPublic:
-        return WorkflowPublic(
-            name="test",
-            trigger=[{"event": "test", "config": {}}],
-            jobs=[],
-            job_edges=[],
-            id="test",
-        )
+        workflow_client = WorkflowClient()
+        return workflow_client.create(workflow)
 
     @app.get("/workflows/{workflow_id}")
     async def get_workflow(workflow_id: str) -> WorkflowPublic:
-        return WorkflowPublic(
-            name="test",
-            trigger=[{"event": "test", "config": {}}],
-            jobs=[],
-            job_edges=[],
-            id="test",
-        )
+        workflow_client = WorkflowClient()
+        return workflow_client.get(workflow_id)
 
     @app.put("/workflows/{workflow_id}")
     async def update_workflow(
         workflow_id: str, workflow: WorkflowCreate
     ) -> WorkflowPublic:
-        return WorkflowPublic(
-            name="test",
-            trigger=[{"event": "test", "config": {}}],
-            jobs=[],
-            job_edges=[],
-            id="test",
-        )
+        workflow_client = WorkflowClient()
+        return workflow_client.put(workflow_id, workflow)
 
     @app.post("/ai")
     async def create_ai_workflow(workflow: WorkflowAIRequest) -> WorkflowAIResponse:
@@ -94,10 +83,7 @@ def create_app():
     @app.get("/step_definitions/{step_id}")
     async def get_step_definition(step_id: str) -> StepDefinition:
         step_client = StepDefinitionClient()
-        step = step_client.get(step_id)
-        if step is None:
-            raise HTTPException(status_code=404, detail="Step definition not found")
-        return step
+        return step_client.get(step_id)
 
     return app
 

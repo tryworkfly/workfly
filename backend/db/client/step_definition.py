@@ -1,5 +1,7 @@
 from typing import OrderedDict
 
+from fastapi import HTTPException
+
 from ..model.step_definition import StepDefinition, StepInput
 
 
@@ -92,5 +94,8 @@ class StepDefinitionClient:
     def get_all(self):
         return list(_steps.values())
 
-    def get(self, id: str) -> StepDefinition | None:
-        return _steps.get(id)
+    def get(self, id: str) -> StepDefinition:
+        step = _steps.get(id)
+        if step is None:
+            raise HTTPException(status_code=404, detail="Step definition not found")
+        return step
