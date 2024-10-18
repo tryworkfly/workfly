@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from ai.ai_client import AIClient
 from db.model.step_definition import StepDefinition
 from db.model.workflow import WorkflowCreate, WorkflowPublic
-from db.step_definition import StepDefinitionClient
+from db.client.step_definition import StepDefinitionClient
 from workflow.workflow_request import (
     WorkflowAIResponse,
     WorkflowAIRequest,

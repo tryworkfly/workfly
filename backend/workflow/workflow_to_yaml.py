@@ -1,7 +1,7 @@
 from typing import Any, Iterator, NotRequired, TypedDict
 import yaml
 
-from db.step_definition import StepDefinitionClient
+from db.client.step_definition import StepDefinitionClient
 from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
 
 StepActionYAML = TypedDict(

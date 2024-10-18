@@ -1,10 +1,10 @@
 from typing import OrderedDict
 
-from db.step import Step, StepInput
+from db.model.step_definition import StepDefinition, StepInput
 
-_steps: OrderedDict[str, Step] = OrderedDict()
+_steps: OrderedDict[str, StepDefinition] = OrderedDict()
 
-_steps["test_uses"] = Step(
+_steps["test_uses"] = StepDefinition(
     name="Test Step",
     id="test_uses",
     version="v0.0.1",
@@ -14,7 +14,7 @@ _steps["test_uses"] = Step(
     required_permissions={"contents": {"read"}},
 )
 
-_steps["test_uses_2"] = Step(
+_steps["test_uses_2"] = StepDefinition(
     name="Test Step 2",
     id="test_uses_2",
     version="v0.0.1",
@@ -24,7 +24,7 @@ _steps["test_uses_2"] = Step(
     required_permissions={"contents": {"write"}},
 )
 
-_steps["custom/code"] = Step(
+_steps["custom/code"] = StepDefinition(
     name="Run Code",
     id="custom/code",
     version="v1.0.0",
@@ -40,7 +40,7 @@ _steps["custom/code"] = Step(
     ],
 )
 
-_steps["actions/checkout"] = Step(
+_steps["actions/checkout"] = StepDefinition(
     name="Checkout",
     id="actions/checkout",
     version="v4.2.0",
@@ -61,7 +61,7 @@ _steps["actions/checkout"] = Step(
         ),
     ],
 )
-_steps["JamesIves/github-pages-deploy-action"] = Step(
+_steps["JamesIves/github-pages-deploy-action"] = StepDefinition(
     name="Deploy to GitHub Pages",
     id="JamesIves/github-pages-deploy-action",
     version="v4.6.8",
@@ -79,7 +79,7 @@ _steps["JamesIves/github-pages-deploy-action"] = Step(
 )
 
 
-class MockStepClient:
+class MockStepDefinitionClient:
     def __init__(self) -> None:
         pass
 

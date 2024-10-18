@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, TypedDict
 from sqlalchemy import JSON, Column
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 # class _JobBase(SQLModel):

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 import yaml
 
-from tests.mocks.db.step import MockStepClient
+from tests.mocks.db.step_definition import MockStepDefinitionClient
 from workflow.workflow_to_yaml import JobYAML, WorkflowToYAML
 from workflow.workflow_request import (
     JobRequest,
@@ -28,7 +28,7 @@ class TestWorkflowToYAML:
             "jobs": jobs,
         }
 
-    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
+    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
     def test_simple_workflow(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -65,7 +65,7 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
+    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
     def test_custom_code_step(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -107,7 +107,7 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
+    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
     def test_workflow_with_dependent_jobs(self):
         workflow = WorkflowRequest(
             name="test_workflow",
@@ -170,7 +170,7 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepClient", new=MockStepClient)
+    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
     def test_checkout_then_build(self):
         workflow = WorkflowRequest(
             name="Deploy to GitHub Pages",

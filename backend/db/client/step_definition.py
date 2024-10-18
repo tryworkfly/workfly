@@ -1,6 +1,6 @@
 from typing import OrderedDict
 
-from .model.step_definition import StepDefinition, StepInput
+from ..model.step_definition import StepDefinition, StepInput
 
 
 _steps: OrderedDict[str, StepDefinition] = OrderedDict()
