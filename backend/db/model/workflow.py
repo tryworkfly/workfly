@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, TypedDict
+import uuid
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
 
@@ -41,7 +42,7 @@ class Trigger(TypedDict):
 
 
 class Workflow(_WorkflowBase, table=True):
-    id: str | None = Field(default=None, primary_key=True)
+    id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
 class WorkflowCreate(_WorkflowBase):
@@ -49,4 +50,4 @@ class WorkflowCreate(_WorkflowBase):
 
 
 class WorkflowPublic(_WorkflowBase):
-    id: str
+    id: uuid.UUID

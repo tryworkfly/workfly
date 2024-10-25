@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter
 
 from db.client import WorkflowClient
@@ -7,25 +8,25 @@ from db.model import WorkflowCreate, WorkflowPublic
 router = APIRouter(prefix="/workflows")
 
 
-@router.get("/")
-async def list_workflows() -> list[WorkflowPublic]:
+@router.get("/", response_model=list[WorkflowPublic])
+async def list_workflows():
     workflow_client = WorkflowClient()
-    return workflow_client.get_all()
+    return list(workflow_client.get_all())
 
 
-@router.get("/{workflow_id}")
-async def get_workflow(workflow_id: str) -> WorkflowPublic:
+@router.get("/{workflow_id}", response_model=WorkflowPublic)
+async def get_workflow(workflow_id: uuid.UUID):
     workflow_client = WorkflowClient()
     return workflow_client.get(workflow_id)
 
 
-@router.post("/")
-async def create_workflow(workflow: WorkflowCreate) -> WorkflowPublic:
+@router.post("/", response_model=WorkflowPublic)
+async def create_workflow(workflow: WorkflowCreate):
     workflow_client = WorkflowClient()
     return workflow_client.create(workflow)
 
 
-@router.put("/{workflow_id}")
-async def update_workflow(workflow_id: str, workflow: WorkflowCreate) -> WorkflowPublic:
+@router.put("/{workflow_id}", response_model=WorkflowPublic)
+async def update_workflow(workflow_id: uuid.UUID, workflow: WorkflowCreate):
     workflow_client = WorkflowClient()
     return workflow_client.put(workflow_id, workflow)
