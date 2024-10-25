@@ -22,11 +22,9 @@ class WorkflowClient:
         workflows = self._session.exec(statement)
         return workflows
 
-    def get(self, workflow_id: uuid.UUID) -> Workflow:
+    def get(self, workflow_id: uuid.UUID) -> Workflow | None:
         statement = select(Workflow).where(Workflow.id == workflow_id)
         workflow = self._session.exec(statement).first()
-        if workflow is None:
-            raise HTTPException(status_code=404, detail="Workflow not found")
         return workflow
 
     def put(self, workflow_id: uuid.UUID, workflow_update: WorkflowCreate) -> Workflow:

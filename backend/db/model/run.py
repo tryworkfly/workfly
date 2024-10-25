@@ -1,17 +1,18 @@
 from sqlmodel import Field, SQLModel
+import uuid
 
 
 class _RunBase(SQLModel):
     state: str  # RUNNING, SUCCESS, FAILED
     result: str | None = None
-    workflow_id: str = Field(foreign_key="workflow.id", unique=True)
+    workflow_id: uuid.UUID = Field(foreign_key="workflow.id", unique=True)
 
 
 ### Public Models
 
 
 class Run(_RunBase, table=True):
-    id: str | None = Field(default=None, primary_key=True)
+    id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
 class RunCreate(_RunBase):
@@ -19,4 +20,4 @@ class RunCreate(_RunBase):
 
 
 class RunPublic(_RunBase):
-    id: str
+    id: uuid.UUID

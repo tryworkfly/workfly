@@ -1,5 +1,5 @@
 import uuid
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from db.client import WorkflowClient
 from db.model import WorkflowCreate, WorkflowPublic
@@ -17,7 +17,10 @@ async def list_workflows():
 @router.get("/{workflow_id}", response_model=WorkflowPublic)
 async def get_workflow(workflow_id: uuid.UUID):
     workflow_client = WorkflowClient()
-    return workflow_client.get(workflow_id)
+    workflow = workflow_client.get(workflow_id)
+    if workflow is None:
+        raise HTTPException(status_code=404, detail="Workflow not found")
+    return workflow
 
 
 @router.post("/", response_model=WorkflowPublic)

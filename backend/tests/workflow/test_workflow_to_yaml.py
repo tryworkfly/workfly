@@ -1,21 +1,16 @@
 from unittest.mock import patch
 import yaml
 
+from db.model import Job, Step, Trigger, Workflow
 from tests.mocks.db.step_definition import MockStepDefinitionClient
 from workflow.workflow_to_yaml import JobYAML, WorkflowToYAML
-from workflow.workflow_request import (
-    JobRequest,
-    StepRequest,
-    WorkflowRequest,
-    TriggerRequest,
-)
 
 
 class TestWorkflowToYAML:
     def _assert_yaml_equal(
         self,
         expected_yaml: str,
-        workflow_request: WorkflowRequest,
+        workflow_request: Workflow,
         permissions: dict[str, str],
         on: dict[str, dict],
         jobs: dict[str, JobYAML],
@@ -28,25 +23,27 @@ class TestWorkflowToYAML:
             "jobs": jobs,
         }
 
-    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
+    @patch(
+        "workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient
+    )
     def test_simple_workflow(self):
-        workflow = WorkflowRequest(
+        workflow = Workflow(
             name="test_workflow",
             runName="test_workflow_run",
-            trigger=[TriggerRequest(event="test_event", config={})],
+            trigger=[Trigger(event="test_event", config={})],
             jobs=[
-                JobRequest(
+                Job(
                     name="Test Job Request",
                     steps=[
-                        StepRequest(
+                        Step(
                             name="Test Step",
                             inputs={},
-                            id="test_uses",
+                            step_id="test_uses",
                         )
                     ],
                 )
             ],
-            jobEdges=[],
+            job_edges=[],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)
@@ -65,25 +62,27 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
+    @patch(
+        "workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient
+    )
     def test_custom_code_step(self):
-        workflow = WorkflowRequest(
+        workflow = Workflow(
             name="test_workflow",
             runName="test_workflow_run",
-            trigger=[TriggerRequest(event="test_event", config={})],
+            trigger=[Trigger(event="test_event", config={})],
             jobs=[
-                JobRequest(
+                Job(
                     name="Test Job Request",
                     steps=[
-                        StepRequest(
+                        Step(
                             name="Test Step",
                             inputs={"code": "echo 'Hello, World!'"},
-                            id="custom/code",
+                            step_id="custom/code",
                         )
                     ],
                 )
             ],
-            jobEdges=[],
+            job_edges=[],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)
@@ -107,35 +106,37 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
+    @patch(
+        "workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient
+    )
     def test_workflow_with_dependent_jobs(self):
-        workflow = WorkflowRequest(
+        workflow = Workflow(
             name="test_workflow",
             runName="test_workflow_run",
-            trigger=[TriggerRequest(event="test_event", config={})],
+            trigger=[Trigger(event="test_event", config={})],
             jobs=[
-                JobRequest(
+                Job(
                     name="Test Job Request",
                     steps=[
-                        StepRequest(
+                        Step(
                             name="Test Step",
                             inputs={},
-                            id="test_uses",
+                            step_id="test_uses",
                         )
                     ],
                 ),
-                JobRequest(
+                Job(
                     name="Test Job Request 2",
                     steps=[
-                        StepRequest(
+                        Step(
                             name="Test Step 2",
                             inputs={},
-                            id="test_uses_2",
+                            step_id="test_uses_2",
                         )
                     ],
                 ),
             ],
-            jobEdges=[("Test Job Request", "Test Job Request 2")],
+            job_edges=[["Test Job Request", "Test Job Request 2"]],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)
@@ -170,37 +171,39 @@ class TestWorkflowToYAML:
             },
         )
 
-    @patch("workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient)
+    @patch(
+        "workflow.workflow_to_yaml.StepDefinitionClient", new=MockStepDefinitionClient
+    )
     def test_checkout_then_build(self):
-        workflow = WorkflowRequest(
+        workflow = Workflow(
             name="Deploy to GitHub Pages",
             runName="Deploy to GitHub Pages",
-            trigger=[TriggerRequest(event="push", config={"branches": ["main"]})],
+            trigger=[Trigger(event="push", config={"branches": ["main"]})],
             jobs=[
-                JobRequest(
+                Job(
                     name="Build and Deploy",
                     steps=[
-                        StepRequest(
+                        Step(
                             name="Checkout",
                             inputs={},
-                            id="actions/checkout",
+                            step_id="actions/checkout",
                         ),
-                        StepRequest(
+                        Step(
                             name="Install and Build",
                             inputs={"code": "npm ci\nnpm run build"},
-                            id="custom/code",
+                            step_id="custom/code",
                         ),
-                        StepRequest(
+                        Step(
                             name="Deploy",
                             inputs={
                                 "folder": "dist",
                             },
-                            id="JamesIves/github-pages-deploy-action",
+                            step_id="JamesIves/github-pages-deploy-action",
                         ),
                     ],
                 )
             ],
-            jobEdges=[],
+            job_edges=[],
         )
 
         yaml = WorkflowToYAML.to_yaml(workflow)

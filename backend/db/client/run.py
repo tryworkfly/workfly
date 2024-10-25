@@ -1,22 +1,41 @@
-from fastapi import HTTPException
-from ..model.run import RunCreate, RunPublic
-from .database import engine
-from sqlmodel import Session
+from sqlmodel import Session, select
+from typing import Iterable
+import uuid
 
-_test_run = RunPublic(id="test", state="RUNNING", result=None, workflow_id="test")
+from ..model.run import Run, RunCreate
+from .database import engine
 
 
 class RunClient:
     def __init__(self):
-        self.db = Session(engine)
+        self._session = Session(engine)
 
-    def upsert(self, run: RunCreate) -> RunPublic:
-        return _test_run
+    def upsert(self, run_create: RunCreate) -> Run:
+        statement = select(Run).where(Run.workflow_id == run_create.workflow_id)
+        run = self._session.exec(statement).first()
+        if run is None:
+            run = Run.model_validate(run_create)
+            self._session.add(run)
+        else:
+            run.sqlmodel_update(run_create.model_dump())
+            self._session.add(run)
 
-    def get_all(self) -> list[RunPublic]:
-        return [_test_run]
+        self._session.commit()
+        self._session.refresh(run)
 
-    def get(self, run_id: str) -> RunPublic:
-        if _test_run is None:
-            raise HTTPException(status_code=404, detail="Run not found")
-        return _test_run
+        return run
+
+    def get_all(self) -> Iterable[Run]:
+        statement = select(Run)
+        runs = self._session.exec(statement)
+        return runs
+
+    def get(self, run_id: uuid.UUID) -> Run | None:
+        statement = select(Run).where(Run.id == run_id)
+        run = self._session.exec(statement).first()
+        return run
+
+    def get_by_workflow_id(self, workflow_id: uuid.UUID) -> Run | None:
+        statement = select(Run).where(Run.workflow_id == workflow_id)
+        run = self._session.exec(statement).first()
+        return run
