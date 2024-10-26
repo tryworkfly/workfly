@@ -20,9 +20,9 @@ import {
 import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
-import { NodeData } from "@/types/nodes";
+import type { NodeData } from "@/types/node";
 
-export type ActionNode = Node<NodeData & Step>;
+export type ActionNode = Node<NodeData & StepDefinition>;
 
 type UpdateHandler = (k: string, v: string | number | boolean) => void;
 
@@ -58,7 +58,7 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
 }
 
 type ActionCardProps = {
-  data: NodeData & Step;
+  data: NodeData & StepDefinition;
   handler?: UpdateHandler;
   compact?: boolean;
   selected?: boolean;

@@ -8,7 +8,7 @@ import {
   SelectContent,
 } from "../ui/select";
 import { Card, CardTitle, CardHeader, CardContent } from "../ui/card";
-import { NodeData } from "@/types/nodes";
+import type { NodeData } from "@/types/node";
 
 export type TriggerCardNode = Node<NodeData & { trigger: string }>;
 

@@ -13,7 +13,7 @@ from sqlmodel import Field, SQLModel
 
 class _WorkflowBase(SQLModel):
     name: str
-    runName: str | None = None
+    run_name: str | None = None
     trigger: list[Trigger] = Field(sa_column=Column(JSON))
     jobs: list[Job] = Field(sa_column=Column(JSON))
     job_edges: list[list[str]] = Field(sa_column=Column(JSON))  # list of (source, edge)

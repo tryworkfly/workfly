@@ -31,7 +31,7 @@ import { WorkflowAIResponse } from "../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import { toast } from "sonner";
-import useSteps from "@/hooks/useSteps";
+import useStepDefinitions from "@/hooks/useSteps";
 
 const initialNodes: Node[] = [
   {
@@ -65,7 +65,7 @@ function Playground() {
     y: number;
   } | null>(null);
   const [droppedType, _] = useDragAndDrop();
-  const { steps: allSteps } = useSteps();
+  const { stepDefinitions } = useStepDefinitions();
 
   const {
     getIntersectingNodes,
@@ -124,8 +124,8 @@ function Playground() {
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
-      if (allSteps === undefined) return;
-      const action = allSteps.filter((a) => a.name === droppedType);
+      if (stepDefinitions === undefined) return;
+      const action = stepDefinitions.filter((a) => a.name === droppedType);
       if (action.length === 0) return;
       const newNode = {
         id: generateId(),
@@ -135,7 +135,7 @@ function Playground() {
       };
       setNodes((nodes) => nodes.concat(newNode as ActionNode));
     },
-    [setNodes, allSteps, droppedType]
+    [setNodes, stepDefinitions, droppedType]
   );
 
   return (

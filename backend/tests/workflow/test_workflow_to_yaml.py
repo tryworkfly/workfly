@@ -17,7 +17,7 @@ class TestWorkflowToYAML:
     ):
         assert yaml.safe_load(expected_yaml) == {
             "name": workflow_request.name,
-            "run-name": workflow_request.runName,
+            "run-name": workflow_request.run_name,
             "permissions": permissions,
             "on": on,
             "jobs": jobs,
@@ -29,7 +29,7 @@ class TestWorkflowToYAML:
     def test_simple_workflow(self):
         workflow = Workflow(
             name="test_workflow",
-            runName="test_workflow_run",
+            run_name="test_workflow_run",
             trigger=[Trigger(event="test_event", config={})],
             jobs=[
                 Job(
@@ -68,7 +68,7 @@ class TestWorkflowToYAML:
     def test_custom_code_step(self):
         workflow = Workflow(
             name="test_workflow",
-            runName="test_workflow_run",
+            run_name="test_workflow_run",
             trigger=[Trigger(event="test_event", config={})],
             jobs=[
                 Job(
@@ -112,7 +112,7 @@ class TestWorkflowToYAML:
     def test_workflow_with_dependent_jobs(self):
         workflow = Workflow(
             name="test_workflow",
-            runName="test_workflow_run",
+            run_name="test_workflow_run",
             trigger=[Trigger(event="test_event", config={})],
             jobs=[
                 Job(
@@ -177,7 +177,7 @@ class TestWorkflowToYAML:
     def test_checkout_then_build(self):
         workflow = Workflow(
             name="Deploy to GitHub Pages",
-            runName="Deploy to GitHub Pages",
+            run_name="Deploy to GitHub Pages",
             trigger=[Trigger(event="push", config={"branches": ["main"]})],
             jobs=[
                 Job(

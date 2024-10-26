@@ -63,7 +63,7 @@ class WorkflowToYAML:
         return yaml.dump(
             {
                 "name": workflow.name,
-                **({"run-name": workflow.runName} if workflow.runName else {}),
+                **({"run-name": workflow.run_name} if workflow.run_name else {}),
                 "permissions": permissions,
                 "on": triggers,
                 "jobs": jobs,
