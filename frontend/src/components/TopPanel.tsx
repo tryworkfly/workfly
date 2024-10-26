@@ -57,9 +57,9 @@ export default function TopPanel() {
       return;
     }
 
-    const wfRequest: WorkflowRequest = {
+    const wfRequest: Workflow = {
       name: workflowName,
-      runName: workflowName,
+      run_name: workflowName,
       trigger: [
         {
           event: (getNode("trigger") as TriggerCardNode).data.trigger,
@@ -72,7 +72,7 @@ export default function TopPanel() {
           steps: [],
         },
       ],
-      jobEdges: [],
+      job_edges: [],
     };
 
     let currNodeId = nodeConnectionGraph.get("trigger");
@@ -89,7 +89,7 @@ export default function TopPanel() {
         return;
       }
 
-      const data = node.data as Step;
+      const data = node.data as StepDefinition;
       const unfilledRequiredInput = data.inputs.find(
         (v) => v.required && v.value === undefined
       );
@@ -103,9 +103,9 @@ export default function TopPanel() {
         return;
       }
 
-      const newStep: StepRequest = {
+      const newStep: Step = {
         name: data.name,
-        id: data.id,
+        step_id: data.id,
         inputs: Object.fromEntries(
           data.inputs.map((input) => [input.name, input.value])
         ),
@@ -114,7 +114,7 @@ export default function TopPanel() {
       currNodeId = nodeConnectionGraph.get(currNodeId);
     }
 
-    const data = await fetcher("/workflows", {
+    const newWorkflow = await fetcher<Workflow>("/workflows", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -122,13 +122,24 @@ export default function TopPanel() {
       body: JSON.stringify(wfRequest),
     });
 
-    if (typeof data == "object" && data && "workflowYaml" in data) {
-      const yaml = data["workflowYaml"];
-      setGeneratedWorkflow(yaml as string);
-    } else {
-      toast("Error processing workflow", {
-        description: "Please try again.",
+    if (newWorkflow.id) {
+      const runRequest: RunRequest = { workflow_id: newWorkflow.id };
+      const run = await fetcher<Run>("/runs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(runRequest),
       });
+
+      if (run.state === "SUCCESS" && run.result) {
+        const yaml = run.result;
+        setGeneratedWorkflow(yaml);
+      } else {
+        toast("Error processing workflow", {
+          description: "Please try again.",
+        });
+      }
     }
 
     setSubmitting(false);

@@ -12,18 +12,18 @@ import { BotMessageSquare, Plus, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { WorkflowAIResponse } from "@/types/ai";
 import fetcher from "@/lib/fetcher";
-import useSteps from "@/hooks/useSteps";
+import useStepDefinitions from "@/hooks/useSteps";
 import { generateId } from "@/lib/utils";
 import { toast } from "sonner";
 
 function StepsTab() {
-  const { steps: allSteps } = useSteps();
+  const { stepDefinitions } = useStepDefinitions();
   const [_, setDroppedType] = useDragAndDrop();
 
   return (
     <CardContent className="px-3 flex flex-col gap-y-4 items-center overflow-y-scroll">
-      {allSteps &&
-        allSteps.map((step, index) => (
+      {stepDefinitions &&
+        stepDefinitions.map((step, index) => (
           <div
             className="w-full"
             draggable
@@ -45,7 +45,7 @@ function StepsTab() {
 function ChatTab() {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const { steps: allSteps } = useSteps();
+  const { stepDefinitions: allSteps } = useStepDefinitions();
   const { setNodes, setEdges, getNode } = useReactFlow();
 
   const onGenerate = async () => {

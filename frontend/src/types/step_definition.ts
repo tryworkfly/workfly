@@ -1,4 +1,4 @@
-type Step = {
+type StepDefinition = {
   name: string;
   id: string;
   version: string;

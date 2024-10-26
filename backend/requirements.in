@@ -1,0 +1,11 @@
+# Update requirements.txt with the following commands:
+# pip install pip-tools
+# pip-compile requirements.in
+
+fastapi[standard]
+uvicorn
+python-dotenv
+pytest
+openai
+celery
+sqlmodel

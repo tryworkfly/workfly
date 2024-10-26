@@ -1,8 +1,8 @@
 from typing import Any, Iterator, NotRequired, TypedDict
 import yaml
 
-from db.step import StepClient
-from .workflow_request import JobRequest, StepRequest, TriggerRequest, WorkflowRequest
+from db.model import Job, Step, Trigger, Workflow
+from db.client.step_definition import StepDefinitionClient
 
 StepActionYAML = TypedDict(
     "StepActionYAML",
@@ -49,10 +49,10 @@ yaml.add_representer(str, str_presenter)
 
 class WorkflowToYAML:
     @staticmethod
-    def to_yaml(workflow: WorkflowRequest):
+    def to_yaml(workflow: Workflow):
         triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
         jobs, required_permissions = WorkflowToYAML._jobs_to_yaml(
-            iter(workflow.jobs), workflow.jobEdges
+            iter(workflow.jobs), workflow.job_edges
         )
 
         permissions = {
@@ -63,7 +63,7 @@ class WorkflowToYAML:
         return yaml.dump(
             {
                 "name": workflow.name,
-                **({"run-name": workflow.runName} if workflow.runName else {}),
+                **({"run-name": workflow.run_name} if workflow.run_name else {}),
                 "permissions": permissions,
                 "on": triggers,
                 "jobs": jobs,
@@ -72,8 +72,8 @@ class WorkflowToYAML:
         )
 
     @staticmethod
-    def _triggers_to_yaml(triggers: list[TriggerRequest]):
-        return {trigger.event: trigger.config for trigger in triggers}
+    def _triggers_to_yaml(triggers: list[Trigger]):
+        return {trigger["event"]: trigger["config"] for trigger in triggers}
 
     @staticmethod
     def _make_job_id(job_name: str):
@@ -94,7 +94,7 @@ class WorkflowToYAML:
 
     @staticmethod
     def _jobs_to_yaml(
-        jobs: Iterator[JobRequest], job_edges: list[tuple[str, str]]
+        jobs: Iterator[Job], job_edges: list[list[str]]
     ) -> tuple[dict[str, JobYAML], dict[str, set[str]]]:
         job = next(jobs, None)
         if not job:
@@ -102,11 +102,11 @@ class WorkflowToYAML:
 
         dependent_jobs: list[str] = []
         for source, target in job_edges:
-            if target == job.name:
+            if target == job["name"]:
                 dependent_jobs.append(WorkflowToYAML._make_job_id(source))
 
         steps_yaml, steps_required_permissions = WorkflowToYAML._steps_to_yaml(
-            job.steps
+            job["steps"]
         )
         jobs_yaml, required_permissions = WorkflowToYAML._jobs_to_yaml(jobs, job_edges)
 
@@ -114,12 +114,12 @@ class WorkflowToYAML:
             required_permissions, steps_required_permissions
         )
 
-        job_id = WorkflowToYAML._make_job_id(job.name)
+        job_id = WorkflowToYAML._make_job_id(job["name"])
         return (
             {
                 **jobs_yaml,
                 job_id: {
-                    "name": job.name,
+                    "name": job["name"],
                     "runs-on": ["ubuntu-latest"],
                     "needs": dependent_jobs,
                     "steps": steps_yaml,
@@ -129,22 +129,22 @@ class WorkflowToYAML:
         )
 
     @staticmethod
-    def _validate_step_request(step_request: StepRequest):
-        step_db = StepClient()
-        step = step_db.get(step_request.id)
+    def _validate_step_request(step_request: Step):
+        step_db = StepDefinitionClient()
+        step = step_db.get(step_request["step_id"])
 
         if not step:
-            raise ValueError(f"Step {step_request.id} not found")
+            raise ValueError(f"Step {step_request["step_id"]} not found")
         for input in step.inputs:
             if input.required and (
-                not step_request.inputs or input.name not in step_request.inputs
+                not step_request["inputs"] or input.name not in step_request["inputs"]
             ):
                 raise ValueError(f"Input {input.name} not found")
         return step
 
     @staticmethod
     def _steps_to_yaml(
-        step_requests: list[StepRequest],
+        step_requests: list[Step],
     ) -> tuple[list[StepActionYAML], dict[str, set[str]]]:
         """
         Returns a tuple of YAMLified steps and required permissions for the steps.
@@ -160,14 +160,18 @@ class WorkflowToYAML:
 
             if step.id == "custom/code":
                 step_yaml = {
-                    "name": step_request.name,
-                    "run": step_request.inputs["code"],
+                    "name": step_request["name"],
+                    "run": step_request["inputs"]["code"],
                 }
             else:
                 step_yaml = {
-                    "name": step_request.name,
-                    "uses": f"{step_request.id}@{step.version}",
-                    **({"with": step_request.inputs} if step_request.inputs else {}),
+                    "name": step_request["name"],
+                    "uses": f"{step_request['step_id']}@{step.version}",
+                    **(
+                        {"with": step_request["inputs"]}
+                        if step_request["inputs"]
+                        else {}
+                    ),
                 }
 
             steps_yaml.append(step_yaml)

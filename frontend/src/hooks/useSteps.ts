@@ -1,13 +1,13 @@
 import fetcher from "@/lib/fetcher";
 import useSWR from "swr";
 
-function useSteps() {
-  const { data, error, isLoading, isValidating, mutate } = useSWR<Step[]>(
-    "/steps",
+function useStepDefinitions() {
+  const { data, error, isLoading, isValidating, mutate } = useSWR<StepDefinition[]>(
+    "/step_definitions",
     fetcher
   );
   return {
-    steps: data,
+    stepDefinitions: data,
     error,
     isLoading,
     isValidating,
@@ -15,4 +15,4 @@ function useSteps() {
   };
 }
 
-export default useSteps;
+export default useStepDefinitions;
