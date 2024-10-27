@@ -1,4 +1,6 @@
-type Workflow = {
+import { XYPosition } from "@xyflow/react";
+
+export type Workflow = {
   id?: string;
   name: string;
   run_name?: string;
@@ -7,20 +9,21 @@ type Workflow = {
   job_edges: [string, string][]; // source to target
 };
 
-type Trigger = {
+export type Trigger = {
   event: string; // push, pull_request, etc.
   config: Record<string, any>;
 };
 
-type Job = {
+export type Job = {
   id: string;
   name: string;
   steps: Step[];
 };
 
-type Step = {
+export type Step = {
   id: string;
   name: string;
+  position: XYPosition;
   inputs: Record<string, any>;
   step_id: string;
 };

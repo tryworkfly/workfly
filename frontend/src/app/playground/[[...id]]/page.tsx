@@ -83,31 +83,6 @@ function Playground({ id }: { id?: string }) {
           | TriggerNode
           | undefined;
 
-        const newEdges = steps.reduce((prev, curr) => {
-          const prevEdge = prev.at(-1);
-          if (prevEdge) {
-            const prevTarget = prevEdge[1];
-            return [...prev, [prevTarget, curr.id] satisfies [string, string]];
-          } else {
-            // first node -> trigger node
-            return [...prev, ["trigger", curr.id] satisfies [string, string]];
-          }
-        }, [] as [string, string][]);
-        setEdges((prev) =>
-          newEdges.map(([newTarget, newSource]) => {
-            const edge = prev.find(
-              (prevEdge) =>
-                prevEdge.source === newTarget && prevEdge.target === newSource
-            );
-
-            return {
-              id: edge?.id ?? generateId(),
-              source: newSource,
-              target: newTarget,
-            };
-          })
-        );
-
         return [
           {
             id: "trigger",
@@ -125,7 +100,7 @@ function Playground({ id }: { id?: string }) {
 
             return {
               id: newStep.id,
-              position: step?.position ?? { x: 0, y: 0 },
+              position: newStep.position ?? step?.position ?? { x: 0, y: 0 },
               type: "actionNode",
               data: {
                 definition: stepDefinitions.find(
@@ -137,6 +112,31 @@ function Playground({ id }: { id?: string }) {
           }),
         ];
       });
+
+      const newEdges = steps.reduce((prev, curr) => {
+        const prevEdge = prev.at(-1);
+        if (prevEdge) {
+          const prevTarget = prevEdge[1];
+          return [...prev, [prevTarget, curr.id] satisfies [string, string]];
+        } else {
+          // first node -> trigger node
+          return [...prev, ["trigger", curr.id] satisfies [string, string]];
+        }
+      }, [] as [string, string][]);
+      setEdges((prev) =>
+        newEdges.map(([newTarget, newSource]) => {
+          const edge = prev.find(
+            (prevEdge) =>
+              prevEdge.source === newTarget && prevEdge.target === newSource
+          );
+
+          return {
+            id: edge?.id ?? generateId(),
+            source: newSource,
+            target: newTarget,
+          };
+        })
+      );
     }
   }, [workflow, stepDefinitions]);
 

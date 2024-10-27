@@ -21,6 +21,7 @@ import { Separator } from "../ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 import type { NodeData } from "@/types/node";
+import { Step } from "@/types/workflow";
 
 export type ActionNode = Node<
   NodeData & { definition: StepDefinition; inputs: Step["inputs"] }

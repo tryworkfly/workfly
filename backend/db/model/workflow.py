@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 import uuid
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
@@ -28,6 +28,7 @@ class _WorkflowBase(SQLModel):
 class Step(TypedDict):
     id: str
     name: str
+    position: dict[Literal["x", "y"], float]
     inputs: dict[str, Any]
     step_id: str  # corresponding to a certain Action in DB
 

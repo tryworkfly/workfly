@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { generateId } from "@/lib/utils";
+import { Step, Workflow } from "@/types/workflow";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
@@ -108,6 +109,7 @@ export default function TopPanel() {
       const newStep: Step = {
         id: node.id,
         name: data.definition.name,
+        position: node.position,
         step_id: data.definition.id,
         inputs: data.inputs,
       };

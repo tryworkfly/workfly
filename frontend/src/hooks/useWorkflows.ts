@@ -1,4 +1,5 @@
 import fetcher from "@/lib/fetcher";
+import { Workflow } from "@/types/workflow";
 import useSWR from "swr";
 
 export function useWorkflow(id?: string) {
