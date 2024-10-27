@@ -82,7 +82,6 @@ export function ActionCard({
       </Card>
     );
   }
-  console.log(data);
 
   return (
     <Card

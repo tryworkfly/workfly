@@ -46,7 +46,7 @@ export default function GeneratedWorkflowDialog({
         <DialogHeader>
           <DialogTitle>Generated Workflow for {workflowName}:</DialogTitle>
         </DialogHeader>
-        <DialogDescription>
+        <DialogDescription asChild>
           <pre className="bg-gray-100 p-4 rounded-md overflow-x-scroll">
             {generatedWorkflow}
           </pre>

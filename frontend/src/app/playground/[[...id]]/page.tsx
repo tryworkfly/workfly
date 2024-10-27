@@ -29,16 +29,9 @@ import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
 import { TriggerNode } from "@/components/nodes/TriggerNode";
+import { makeTriggerNode, stepsToNodes } from "@/lib/stepNodeUtils";
 
-const initialNodes: Node[] = [
-  {
-    id: "trigger",
-    type: "triggerNode",
-    position: { x: 500, y: 300 },
-    data: { trigger: "push" },
-    deletable: false,
-  },
-];
+const initialNodes: Node[] = [makeTriggerNode()];
 
 const initialEdges: Edge[] = [];
 
@@ -81,33 +74,11 @@ function Playground({ id }: { id?: string }) {
           | undefined;
 
         return [
-          {
-            id: "trigger",
-            position: trigger?.position ?? { x: 500, y: 300 },
-            type: "triggerNode",
-            deletable: false,
-            data: {
-              trigger:
-                workflow.trigger[0].event ?? trigger?.data.trigger ?? "push",
-            },
-          } satisfies TriggerNode,
-          ...steps.map((newStep) => {
-            const step = prev.find((node) => node.id === newStep.id) as
-              | ActionNode
-              | undefined;
-
-            return {
-              id: newStep.id,
-              position: newStep.position ?? step?.position ?? { x: 0, y: 0 },
-              type: "actionNode",
-              data: {
-                definition: stepDefinitions.find(
-                  (step) => step.id === newStep.step_id
-                )!,
-                inputs: newStep.inputs ?? step?.data.inputs ?? {},
-              },
-            } satisfies ActionNode;
-          }),
+          makeTriggerNode(
+            workflow.trigger[0].event ?? trigger?.data.trigger,
+            trigger?.position
+          ),
+          ...stepsToNodes(steps, prev, stepDefinitions),
         ];
       });
 
