@@ -22,7 +22,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { QuestionMarkCircledIcon } from "@radix-ui/react-icons";
 import type { NodeData } from "@/types/node";
 
-export type ActionNode = Node<NodeData & StepDefinition>;
+export type ActionNode = Node<
+  NodeData & { definition: StepDefinition; inputs: Step["inputs"] }
+>;
 
 type UpdateHandler = (k: string, v: string | number | boolean) => void;
 
@@ -33,12 +35,10 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
       let currNode = getNode(props.id) as ActionNode;
       updateNodeData(props.id, {
         ...currNode?.data,
-        inputs: currNode?.data.inputs.map((input) => {
-          if (input.name === k) {
-            return { ...input, value: v };
-          }
-          return input;
-        }),
+        inputs: {
+          ...currNode?.data.inputs,
+          [k]: v,
+        },
         error: false,
       });
     },
@@ -58,7 +58,7 @@ export default function ActionNode(props: NodeProps<ActionNode>) {
 }
 
 type ActionCardProps = {
-  data: NodeData & StepDefinition;
+  data: ActionNode["data"];
   handler?: UpdateHandler;
   compact?: boolean;
   selected?: boolean;
@@ -74,10 +74,10 @@ export function ActionCard({
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>{data.name}</CardTitle>
-          <CardDescription>{data.category}</CardDescription>
+          <CardTitle>{data.definition.name}</CardTitle>
+          <CardDescription>{data.definition.category}</CardDescription>
         </CardHeader>
-        <CardContent>{data.description}</CardContent>
+        <CardContent>{data.definition.description}</CardContent>
       </Card>
     );
   }
@@ -89,22 +89,22 @@ export function ActionCard({
       }`}
     >
       <CardHeader className="pb-3">
-        <CardTitle>{data.name}</CardTitle>
-        <CardDescription>{data.category}</CardDescription>
+        <CardTitle>{data.definition.name}</CardTitle>
+        <CardDescription>{data.definition.category}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-y-4">
         <div className="flex flex-col">
-          {data.inputs
+          {data.definition.inputs
             .filter((input) => input.required)
             .map((input, index) => (
               <ActionInput key={index} props={input} handler={handler} />
             ))}
         </div>
-        {data.inputs.filter((input) => !input.required).length > 0 && (
+        {data.definition.inputs.filter((input) => !input.required).length >
+          0 && (
           <>
-            {data.inputs.filter((input) => input.required).length > 0 && (
-              <Separator />
-            )}
+            {data.definition.inputs.filter((input) => input.required).length >
+              0 && <Separator />}
             <Accordion type="single" collapsible className="p-1">
               <AccordionItem value="item-1" className="border-b-0">
                 <AccordionTrigger className="p-2 text-gray-500">
@@ -113,7 +113,7 @@ export function ActionCard({
                 <AccordionContent>
                   <div className="grid gap-4 my-2">
                     <div className="grid gap-2">
-                      {data.inputs
+                      {data.definition.inputs
                         .filter((input) => !input.required)
                         .map((input, index) => (
                           <ActionInput

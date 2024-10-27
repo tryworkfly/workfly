@@ -26,12 +26,14 @@ class _WorkflowBase(SQLModel):
 
 
 class Step(TypedDict):
+    id: str
     name: str
     inputs: dict[str, Any]
     step_id: str  # corresponding to a certain Action in DB
 
 
 class Job(TypedDict):
+    id: str
     name: str
     steps: list[Step]
 

@@ -13,11 +13,13 @@ type Trigger = {
 };
 
 type Job = {
+  id: string;
   name: string;
   steps: Step[];
 };
 
 type Step = {
+  id: string;
   name: string;
   inputs: Record<string, any>;
   step_id: string;

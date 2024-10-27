@@ -10,7 +10,7 @@ import {
 import { Card, CardTitle, CardHeader, CardContent } from "../ui/card";
 import type { NodeData } from "@/types/node";
 
-export type TriggerCardNode = Node<NodeData & { trigger: string }>;
+export type TriggerNode = Node<NodeData & { trigger: string }>;
 
 const triggerEvents: [string, string][] = [
   ["On Push", "push"],
@@ -21,7 +21,7 @@ export default function TriggerNode({
   id,
   data,
   selected,
-}: NodeProps<TriggerCardNode>) {
+}: NodeProps<TriggerNode>) {
   const { updateNodeData } = useReactFlow();
 
   const onTriggerChange = (value: string) => {
@@ -44,7 +44,7 @@ export default function TriggerNode({
           </SelectTrigger>
           <SelectContent>
             {triggerEvents.map(([label, value]) => (
-              <SelectItem value={value}>{label}</SelectItem>
+              <SelectItem key={label} value={value}>{label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

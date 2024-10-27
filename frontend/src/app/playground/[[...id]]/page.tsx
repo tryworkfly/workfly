@@ -27,11 +27,13 @@ import nodeTypes from "./nodeTypes";
 import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
-import { WorkflowAIResponse } from "../../types/ai";
+import { WorkflowAIResponse } from "../../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import { toast } from "sonner";
 import useStepDefinitions from "@/hooks/useSteps";
+import { useWorkflow } from "@/hooks/useWorkflows";
+import { TriggerNode } from "@/components/nodes/TriggerNode";
 
 const initialNodes: Node[] = [
   {
@@ -45,19 +47,19 @@ const initialNodes: Node[] = [
 
 const initialEdges: Edge[] = [];
 
-export default function App() {
+export default function App({ params }: { params: { id?: string[] } }) {
   return (
     <TooltipProvider delayDuration={0}>
       <ReactFlowProvider>
         <DragNDropProvider>
-          <Playground />
+          <Playground id={params.id?.at(0)} />
         </DragNDropProvider>
       </ReactFlowProvider>
     </TooltipProvider>
   );
 }
 
-function Playground() {
+function Playground({ id }: { id?: string }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectStartPos, setSelectStartPos] = useState<{
@@ -66,13 +68,77 @@ function Playground() {
   } | null>(null);
   const [droppedType, _] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
+  const { workflow } = useWorkflow(id);
 
-  const {
-    getIntersectingNodes,
-    getNode,
-    updateNodeData,
-    screenToFlowPosition,
-  } = useReactFlow();
+  const { getIntersectingNodes, updateNodeData, screenToFlowPosition } =
+    useReactFlow();
+
+  useEffect(() => {
+    // Currently don't support multiple jobs
+    if (workflow && stepDefinitions) {
+      const steps = workflow.jobs[0].steps;
+
+      setNodes((prev) => {
+        const trigger = prev.find((node) => node.id === "trigger") as
+          | TriggerNode
+          | undefined;
+
+        const newEdges = steps.reduce((prev, curr) => {
+          const prevEdge = prev.at(-1);
+          if (prevEdge) {
+            const prevTarget = prevEdge[1];
+            return [...prev, [prevTarget, curr.id] satisfies [string, string]];
+          } else {
+            // first node -> trigger node
+            return [...prev, ["trigger", curr.id] satisfies [string, string]];
+          }
+        }, [] as [string, string][]);
+        setEdges((prev) =>
+          newEdges.map(([newTarget, newSource]) => {
+            const edge = prev.find(
+              (prevEdge) =>
+                prevEdge.source === newTarget && prevEdge.target === newSource
+            );
+
+            return {
+              id: edge?.id ?? generateId(),
+              source: newSource,
+              target: newTarget,
+            };
+          })
+        );
+
+        return [
+          {
+            id: "trigger",
+            position: trigger?.position ?? { x: 0, y: 0 },
+            type: "triggerNode",
+            deletable: false,
+            data: {
+              trigger: trigger?.data.trigger ?? "push",
+            },
+          } satisfies TriggerNode,
+          ...steps.map((newStep) => {
+            const step = prev.find((node) => node.id === newStep.id) as
+              | ActionNode
+              | undefined;
+
+            return {
+              id: newStep.id,
+              position: step?.position ?? { x: 0, y: 0 },
+              type: "actionNode",
+              data: {
+                definition: stepDefinitions.find(
+                  (step) => step.id === newStep.step_id
+                )!,
+                inputs: newStep.inputs ?? step?.data.inputs ?? {},
+              },
+            } satisfies ActionNode;
+          }),
+        ];
+      });
+    }
+  }, [workflow, stepDefinitions]);
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => {
@@ -124,16 +190,17 @@ function Playground() {
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
+      console.log("drop!!!");
       if (stepDefinitions === undefined) return;
       const action = stepDefinitions.filter((a) => a.name === droppedType);
       if (action.length === 0) return;
-      const newNode = {
+      const newNode: ActionNode = {
         id: generateId(),
         type: "actionNode",
         position: screenToFlowPosition({ x: e.clientX, y: e.clientY }),
-        data: structuredClone(action[0]),
+        data: { definition: structuredClone(action[0]), inputs: {} },
       };
-      setNodes((nodes) => nodes.concat(newNode as ActionNode));
+      setNodes((nodes) => nodes.concat(newNode));
     },
     [setNodes, stepDefinitions, droppedType]
   );

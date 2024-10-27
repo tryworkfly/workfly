@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import type { TriggerCardNode } from "./nodes/TriggerNode";
+import type { TriggerNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
 import Image from "next/image";
 import { Input } from "./ui/input";
@@ -11,6 +11,7 @@ import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
+import { generateId } from "@/lib/utils";
 
 export default function TopPanel() {
   const [submitting, setSubmitting] = useState(false);
@@ -19,7 +20,7 @@ export default function TopPanel() {
     null
   );
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
-    ActionNode | TriggerCardNode
+    ActionNode | TriggerNode
   >();
 
   const setNodesError = (
@@ -62,12 +63,13 @@ export default function TopPanel() {
       run_name: workflowName,
       trigger: [
         {
-          event: (getNode("trigger") as TriggerCardNode).data.trigger,
+          event: (getNode("trigger") as TriggerNode).data.trigger,
           config: {},
         },
       ],
       jobs: [
         {
+          id: generateId(),
           name: "Main Job",
           steps: [],
         },
@@ -89,9 +91,9 @@ export default function TopPanel() {
         return;
       }
 
-      const data = node.data as StepDefinition;
-      const unfilledRequiredInput = data.inputs.find(
-        (v) => v.required && v.value === undefined
+      const data = node.data as ActionNode["data"];
+      const unfilledRequiredInput = data.definition.inputs.find(
+        (v) => v.required && data.inputs[v.name] === undefined
       );
       if (unfilledRequiredInput) {
         setNodesError(
@@ -104,11 +106,10 @@ export default function TopPanel() {
       }
 
       const newStep: Step = {
-        name: data.name,
-        step_id: data.id,
-        inputs: Object.fromEntries(
-          data.inputs.map((input) => [input.name, input.value])
-        ),
+        id: node.id,
+        name: data.definition.name,
+        step_id: data.definition.id,
+        inputs: data.inputs,
       };
       wfRequest.jobs[0].steps.push(newStep);
       currNodeId = nodeConnectionGraph.get(currNodeId);
