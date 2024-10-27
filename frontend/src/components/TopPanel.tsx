@@ -14,9 +14,14 @@ import { ActionNode } from "./nodes/ActionNode";
 import { generateId } from "@/lib/utils";
 import { Step, Workflow } from "@/types/workflow";
 
-export default function TopPanel() {
+export default function TopPanel({
+  workflowName,
+  setWorkflowName,
+}: {
+  workflowName: string;
+  setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const [submitting, setSubmitting] = useState(false);
-  const [workflowName, setWorkflowName] = useState("My New Workflow");
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
   );

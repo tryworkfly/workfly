@@ -26,6 +26,7 @@ function StepsTab() {
         stepDefinitions.map((step, index) => (
           <div
             className="w-full"
+            key={step.id}
             draggable
             onDragOver={(e) => {
               e.preventDefault();

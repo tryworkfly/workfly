@@ -82,6 +82,7 @@ export function ActionCard({
       </Card>
     );
   }
+  console.log(data);
 
   return (
     <Card
@@ -98,7 +99,12 @@ export function ActionCard({
           {data.definition.inputs
             .filter((input) => input.required)
             .map((input, index) => (
-              <ActionInput key={index} props={input} handler={handler} />
+              <ActionInput
+                key={index}
+                props={input}
+                defaultValue={data.inputs[input.name]}
+                handler={handler}
+              />
             ))}
         </div>
         {data.definition.inputs.filter((input) => !input.required).length >
@@ -120,6 +126,7 @@ export function ActionCard({
                           <ActionInput
                             key={index}
                             props={input}
+                            defaultValue={data.inputs[input.name]}
                             handler={handler}
                           />
                         ))}
@@ -137,21 +144,25 @@ export function ActionCard({
 
 function ActionInput({
   props,
+  defaultValue,
   handler,
 }: {
   props: StepInput;
+  defaultValue?: string | number;
   handler?: UpdateHandler;
 }) {
-  let dftVal: string | number;
-  switch (props.type) {
-    case "number":
-      dftVal = 0;
-      break;
-    case "string":
-      dftVal = "";
-      break;
-    default:
-      dftVal = "";
+  let dftVal: string | number | undefined = defaultValue;
+  if (!dftVal) {
+    switch (props.type) {
+      case "number":
+        dftVal = 0;
+        break;
+      case "string":
+        dftVal = "";
+        break;
+      default:
+        dftVal = "";
+    }
   }
 
   return (

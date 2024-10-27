@@ -19,18 +19,13 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import useSWR from "swr";
-import fetcher from "@/lib/fetcher";
 import type { ActionNode } from "@/components/nodes/ActionNode";
-import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
 import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
-import { WorkflowAIResponse } from "../../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
-import { toast } from "sonner";
 import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
 import { TriggerNode } from "@/components/nodes/TriggerNode";
@@ -69,6 +64,7 @@ function Playground({ id }: { id?: string }) {
   const [droppedType, _] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
   const { workflow } = useWorkflow(id);
+  const [workflowName, setWorkflowName] = useState("My New Workflow");
 
   const { getIntersectingNodes, updateNodeData, screenToFlowPosition } =
     useReactFlow();
@@ -76,6 +72,7 @@ function Playground({ id }: { id?: string }) {
   useEffect(() => {
     // Currently don't support multiple jobs
     if (workflow && stepDefinitions) {
+      setWorkflowName(workflow.name);
       const steps = workflow.jobs[0].steps;
 
       setNodes((prev) => {
@@ -86,11 +83,12 @@ function Playground({ id }: { id?: string }) {
         return [
           {
             id: "trigger",
-            position: trigger?.position ?? { x: 0, y: 0 },
+            position: trigger?.position ?? { x: 500, y: 300 },
             type: "triggerNode",
             deletable: false,
             data: {
-              trigger: trigger?.data.trigger ?? "push",
+              trigger:
+                workflow.trigger[0].event ?? trigger?.data.trigger ?? "push",
             },
           } satisfies TriggerNode,
           ...steps.map((newStep) => {
@@ -213,7 +211,7 @@ function Playground({ id }: { id?: string }) {
         e.preventDefault();
       }}
     >
-      <TopPanel />
+      <TopPanel workflowName={workflowName} setWorkflowName={setWorkflowName} />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
