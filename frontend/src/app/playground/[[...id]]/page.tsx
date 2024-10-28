@@ -29,7 +29,7 @@ import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
 import { TriggerNode } from "@/components/nodes/TriggerNode";
-import { makeTriggerNode, stepsToNodes } from "@/lib/stepNodeUtils";
+import { makeTriggerNode, stepsToNodes } from "@/lib/workflowUtils";
 
 const initialNodes: Node[] = [makeTriggerNode()];
 
