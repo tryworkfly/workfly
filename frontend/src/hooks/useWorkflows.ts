@@ -7,6 +7,7 @@ export function useWorkflow(id?: string) {
     id ? `/workflows/${id}` : null,
     fetcher
   );
+
   return {
     workflow: data,
     error,

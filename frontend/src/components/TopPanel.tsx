@@ -13,13 +13,20 @@ import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { Workflow } from "@/types/workflow";
 import { makeWorkflow } from "@/lib/workflowUtils";
+import useLoadSave from "@/hooks/useLoadSave";
 
 export default function TopPanel({
   workflowName,
   setWorkflowName,
+  jobId,
+  isSaving,
+  lastSavedTimestamp,
 }: {
   workflowName: string;
   setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
+  jobId: string | undefined;
+  isSaving: boolean;
+  lastSavedTimestamp: Date | null;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
@@ -43,6 +50,7 @@ export default function TopPanel({
   };
 
   const onSubmit = async () => {
+    if (!jobId) return;
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
@@ -94,8 +102,7 @@ export default function TopPanel({
       currNodeId = nodeConnectionGraph.get(currNodeId);
     }
 
-    const triggerNode = getNode("trigger") as TriggerNode;
-    const wfRequest = makeWorkflow(workflowName, triggerNode, nodes, edges);
+    const wfRequest = makeWorkflow(workflowName, jobId, nodes, edges);
 
     const newWorkflow = await fetcher<Workflow>("/workflows", {
       method: "POST",
@@ -146,19 +153,30 @@ export default function TopPanel({
         }}
         className="w-60 text-center border-none shadow-none font-semibold"
       />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            onClick={onSubmit}
-            disabled={submitting}
-            className="font-bold"
-          >
-            {submitting ? "Taking off..." : "Fly"}
-            <Send className="w-4 h-4 ml-2" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Submit workflow!</TooltipContent>
-      </Tooltip>
+      <div className="relative">
+        <span className="flex justify-end items-center absolute -left-[25dvw] right-full h-full">
+          <p className="mr-4 text-xs text-muted-foreground text-right">
+            {isSaving
+              ? "Saving..."
+              : lastSavedTimestamp
+              ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
+              : ""}
+          </p>
+        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onSubmit}
+              disabled={submitting}
+              className="font-bold"
+            >
+              {submitting ? "Taking off..." : "Fly"}
+              <Send className="w-4 h-4 ml-2" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Submit workflow!</TooltipContent>
+        </Tooltip>
+      </div>
       <GeneratedWorkflowDialog
         workflowName={workflowName}
         generatedWorkflow={generatedWorkflow}

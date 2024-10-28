@@ -28,8 +28,12 @@ import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
-import { TriggerNode } from "@/components/nodes/TriggerNode";
-import { makeTriggerNode, stepsToNodes } from "@/lib/workflowUtils";
+import {
+  makeTriggerNode,
+  makeWorkflow,
+  stepsToNodes,
+} from "@/lib/workflowUtils";
+import useLoadSave from "@/hooks/useLoadSave";
 
 const initialNodes: Node[] = [makeTriggerNode()];
 
@@ -54,32 +58,20 @@ function Playground({ id }: { id?: string }) {
     x: number;
     y: number;
   } | null>(null);
-  const [droppedType, _] = useDragAndDrop();
+  const [droppedType] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
   const { workflow } = useWorkflow(id);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
+  const { isSaving, lastSavedTimestamp } = useLoadSave(
+    id,
+    workflowName,
+    setWorkflowName,
+    nodes,
+    edges
+  );
 
   const { getIntersectingNodes, updateNodeData, screenToFlowPosition } =
     useReactFlow();
-
-  useEffect(() => {
-    // Currently don't support multiple jobs
-    if (workflow && stepDefinitions) {
-      setWorkflowName(workflow.name);
-      const steps = workflow.jobs[0].steps;
-      const stepEdges = workflow.jobs[0].step_edges;
-
-      setNodes([
-        makeTriggerNode(
-          workflow.trigger.id,
-          workflow.trigger.conditions[0].event,
-          workflow.trigger.position
-        ),
-        ...stepsToNodes(steps, stepDefinitions),
-      ]);
-      setEdges(stepEdges);
-    }
-  }, [workflow, stepDefinitions]);
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => {
@@ -154,7 +146,13 @@ function Playground({ id }: { id?: string }) {
         e.preventDefault();
       }}
     >
-      <TopPanel workflowName={workflowName} setWorkflowName={setWorkflowName} />
+      <TopPanel
+        workflowName={workflowName}
+        setWorkflowName={setWorkflowName}
+        jobId={workflow?.jobs[0].id}
+        isSaving={isSaving}
+        lastSavedTimestamp={lastSavedTimestamp}
+      />
       <ReactFlow
         nodeTypes={nodeTypes}
         nodes={nodes}
@@ -165,7 +163,7 @@ function Playground({ id }: { id?: string }) {
         onNodeDragStop={onNodeDrag}
         onDrop={onDrop}
         onSelectionStart={onSelectionStart}
-        onSelectionChange={() => console.log("selecting")}
+        // onSelectionChange={() => console.log("selecting")}
         onSelectionEnd={onSelectionEnd}
         proOptions={{ hideAttribution: true }}
         panOnScroll

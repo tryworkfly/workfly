@@ -58,10 +58,11 @@ export function nodesToSteps(nodes: Node[]): Step[] {
 
 export function makeWorkflow(
   workflowName: string,
-  triggerNode: TriggerNode,
+  jobId: string,
   nodes: Node[],
   edges: Edge[]
 ) {
+  const triggerNode = nodes.find((n) => n.id === "trigger")! as TriggerNode;
   const wfRequest: Workflow = {
     name: workflowName,
     run_name: workflowName,
@@ -77,7 +78,7 @@ export function makeWorkflow(
     },
     jobs: [
       {
-        id: generateId(),
+        id: jobId,
         name: "Main Job",
         steps: nodesToSteps(nodes),
         step_edges: edges.map(
