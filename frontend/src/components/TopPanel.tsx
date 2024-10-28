@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { generateId } from "@/lib/utils";
-import { Step, Workflow } from "@/types/workflow";
+import { Edge, Step, Workflow } from "@/types/workflow";
 
 export default function TopPanel({
   workflowName,
@@ -64,25 +64,7 @@ export default function TopPanel({
       return;
     }
 
-    const wfRequest: Workflow = {
-      name: workflowName,
-      run_name: workflowName,
-      trigger: [
-        {
-          event: (getNode("trigger") as TriggerNode).data.trigger,
-          config: {},
-        },
-      ],
-      jobs: [
-        {
-          id: generateId(),
-          name: "Main Job",
-          steps: [],
-        },
-      ],
-      job_edges: [],
-    };
-
+    const steps: Step[] = [];
     let currNodeId = nodeConnectionGraph.get("trigger");
     while (currNodeId !== undefined) {
       const node = getNode(currNodeId);
@@ -118,9 +100,37 @@ export default function TopPanel({
         step_id: data.definition.id,
         inputs: data.inputs,
       };
-      wfRequest.jobs[0].steps.push(newStep);
+      steps.push(newStep);
       currNodeId = nodeConnectionGraph.get(currNodeId);
     }
+
+    const triggerNode = getNode("trigger") as TriggerNode;
+    const wfRequest: Workflow = {
+      name: workflowName,
+      run_name: workflowName,
+      trigger: {
+        id: triggerNode.id,
+        position: triggerNode.position,
+        conditions: [
+          {
+            event: triggerNode.data.trigger,
+            config: {},
+          },
+        ],
+      },
+      jobs: [
+        {
+          id: generateId(),
+          name: "Main Job",
+          steps: steps,
+          step_edges: edges.map(
+            (e) =>
+              ({ id: e.id, source: e.source, target: e.target } satisfies Edge)
+          ),
+        },
+      ],
+      job_edges: [],
+    };
 
     const newWorkflow = await fetcher<Workflow>("/workflows", {
       method: "POST",

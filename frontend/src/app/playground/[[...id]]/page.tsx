@@ -67,45 +67,17 @@ function Playground({ id }: { id?: string }) {
     if (workflow && stepDefinitions) {
       setWorkflowName(workflow.name);
       const steps = workflow.jobs[0].steps;
+      const stepEdges = workflow.jobs[0].step_edges;
 
-      setNodes((prev) => {
-        const trigger = prev.find((node) => node.id === "trigger") as
-          | TriggerNode
-          | undefined;
-
-        return [
-          makeTriggerNode(
-            workflow.trigger[0].event ?? trigger?.data.trigger,
-            trigger?.position
-          ),
-          ...stepsToNodes(steps, prev, stepDefinitions),
-        ];
-      });
-
-      const newEdges = steps.reduce((prev, curr) => {
-        const prevEdge = prev.at(-1);
-        if (prevEdge) {
-          const prevTarget = prevEdge[1];
-          return [...prev, [prevTarget, curr.id] satisfies [string, string]];
-        } else {
-          // first node -> trigger node
-          return [...prev, ["trigger", curr.id] satisfies [string, string]];
-        }
-      }, [] as [string, string][]);
-      setEdges((prev) =>
-        newEdges.map(([newTarget, newSource]) => {
-          const edge = prev.find(
-            (prevEdge) =>
-              prevEdge.source === newTarget && prevEdge.target === newSource
-          );
-
-          return {
-            id: edge?.id ?? generateId(),
-            source: newSource,
-            target: newTarget,
-          };
-        })
-      );
+      setNodes([
+        makeTriggerNode(
+          workflow.trigger.id,
+          workflow.trigger.conditions[0].event,
+          workflow.trigger.position
+        ),
+        ...stepsToNodes(steps, stepDefinitions),
+      ]);
+      setEdges(stepEdges);
     }
   }, [workflow, stepDefinitions]);
 
