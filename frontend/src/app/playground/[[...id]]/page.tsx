@@ -62,7 +62,7 @@ function Playground({ id }: { id?: string }) {
   const { stepDefinitions } = useStepDefinitions();
   const { workflow } = useWorkflow(id);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
-  const { isSaving, lastSavedTimestamp } = useLoadSave(
+  const { isSaving, lastSavedTimestamp, initialLoaded } = useLoadSave(
     id,
     workflowName,
     setWorkflowName,
@@ -139,43 +139,46 @@ function Playground({ id }: { id?: string }) {
   );
 
   return (
-    <div
-      style={{ width: "100vw", height: "100vh" }}
-      className="flex flex-col bg-muted"
-      onDragOver={(e) => {
-        e.preventDefault();
-      }}
-    >
-      <TopPanel
-        workflowName={workflowName}
-        setWorkflowName={setWorkflowName}
-        jobId={workflow?.jobs[0].id}
-        isSaving={isSaving}
-        lastSavedTimestamp={lastSavedTimestamp}
-      />
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeDragStop={onNodeDrag}
-        onDrop={onDrop}
-        onSelectionStart={onSelectionStart}
-        // onSelectionChange={() => console.log("selecting")}
-        onSelectionEnd={onSelectionEnd}
-        proOptions={{ hideAttribution: true }}
-        panOnScroll
-        panOnDrag={[1, 2]}
-        selectionOnDrag
-        zoomOnDoubleClick={false}
-        selectionMode={SelectionMode.Partial}
+    workflow &&
+    stepDefinitions && (
+      <div
+        style={{ width: "100vw", height: "100vh" }}
+        className="flex flex-col bg-muted"
+        onDragOver={(e) => {
+          e.preventDefault();
+        }}
       >
-        <Sidebar />
-        <Controls position="bottom-right" />
-        <Background color="#ccc" variant={BackgroundVariant.Cross} />
-      </ReactFlow>
-    </div>
+        <TopPanel
+          workflowName={workflowName}
+          setWorkflowName={setWorkflowName}
+          jobId={workflow?.jobs[0].id}
+          isSaving={isSaving}
+          lastSavedTimestamp={lastSavedTimestamp}
+        />
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeDragStop={onNodeDrag}
+          onDrop={onDrop}
+          onSelectionStart={onSelectionStart}
+          // onSelectionChange={() => console.log("selecting")}
+          onSelectionEnd={onSelectionEnd}
+          proOptions={{ hideAttribution: true }}
+          panOnScroll
+          panOnDrag={[1, 2]}
+          selectionOnDrag
+          zoomOnDoubleClick={false}
+          selectionMode={SelectionMode.Partial}
+        >
+          <Sidebar />
+          <Controls position="bottom-right" />
+          <Background color="#ccc" variant={BackgroundVariant.Cross} />
+        </ReactFlow>
+      </div>
+    )
   );
 }

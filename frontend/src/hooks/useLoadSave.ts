@@ -24,7 +24,7 @@ async function updateWorkflow(key: string, { arg }: { arg: Workflow }) {
   });
 }
 
-const INACTIVITY_SAVE_TIMEOUT = 1000;
+const INACTIVITY_SAVE_TIMEOUT = 200;
 
 function useLoadSave(
   workflowId: string | undefined,
@@ -36,6 +36,7 @@ function useLoadSave(
   const { stepDefinitions } = useStepDefinitions();
   const { workflow } = useWorkflow(workflowId);
 
+  const initialLoadedTimerRef = useRef(null);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const { setNodes, setEdges } = useReactFlow();
 
@@ -67,30 +68,38 @@ function useLoadSave(
         ...stepsToNodes(steps, stepDefinitions),
       ]);
       setEdges(stepEdges);
-      setInitialLoaded(true);
+
+      // this is horrible
+      if (!initialLoadedTimerRef.current) {
+        // @ts-expect-error
+        initialLoadedTimerRef.current = setTimeout(
+          () => setInitialLoaded(true),
+          500
+        );
+      }
     }
   }, [workflow, stepDefinitions]);
 
   // When nodes/edges change convert to workflow and PUT
   useEffect(() => {
     if (initialLoaded && workflow && stepDefinitions && !isMutating) {
-      // Compare everything about the workflows except id
-      // Because we don't include ID when we make workflows
-      const newWorkflow = makeWorkflow(
-        workflowName,
-        workflow.jobs[0].id,
-        nodes,
-        edges
-      );
-      const { id: unused, ...oldWorkflow } = workflow;
-      const workflowChanged = !_.isEqual(oldWorkflow, newWorkflow);
-      if (!workflowChanged) return;
-
       clearTimeout(saveTimerRef.current);
-      setSaving(true);
       // @ts-expect-error using web settimeout not nodejs settimeout
-      saveTimerRef.current = setTimeout(() => {
-        trigger(
+      saveTimerRef.current = setTimeout(async () => {
+        // Compare everything about the workflows except id
+        // Because we don't include ID when we make workflows
+        const newWorkflow = makeWorkflow(
+          workflowName,
+          workflow.jobs[0].id,
+          nodes,
+          edges
+        );
+        const { id: unused, ...oldWorkflow } = workflow;
+        const workflowChanged = !_.isEqual(oldWorkflow, newWorkflow);
+        if (!workflowChanged) return;
+
+        setSaving(true);
+        await trigger(
           makeWorkflow(
             workflowName,
             workflow?.jobs[0].id ?? generateId(),
@@ -99,14 +108,16 @@ function useLoadSave(
           )
         );
         setLastSavedTimestamp(new Date());
-        setSaving(false);
+        // More aesthetic lol
+        setTimeout(() => setSaving(false), 100);
       }, INACTIVITY_SAVE_TIMEOUT);
     }
-  }, [nodes, edges]);
+  }, [nodes, edges, workflowName]);
 
   return {
     isSaving: saving,
     lastSavedTimestamp,
+    initialLoaded,
   };
 }
 

@@ -144,8 +144,8 @@ export default function TopPanel({
         </h1>
       </div>
       <Input
-        value={workflowName}
-        onChange={(e) => setWorkflowName(e.target.value)}
+        defaultValue={workflowName}
+        onBlur={(e) => setWorkflowName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget instanceof HTMLElement) {
             e.currentTarget.blur();
