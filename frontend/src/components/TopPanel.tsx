@@ -11,19 +11,17 @@ import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
-import { Workflow } from "@/types/workflow";
-import { makeWorkflow } from "@/lib/workflowUtils";
+import { useWorkflow } from "@/hooks/useWorkflows";
+import { useWorkflowId } from "@/hooks/useWorkflowId";
 
 export default function TopPanel({
   workflowName,
   setWorkflowName,
-  jobId,
   isSaving,
   lastSavedTimestamp,
 }: {
   workflowName: string;
   setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
-  jobId: string | undefined;
   isSaving: boolean;
   lastSavedTimestamp: Date | null;
 }) {
@@ -32,6 +30,8 @@ export default function TopPanel({
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
   );
+  const [workflowId] = useWorkflowId();
+  const { workflow } = useWorkflow(workflowId);
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
   >();
@@ -55,6 +55,7 @@ export default function TopPanel({
   };
 
   const onSubmit = async () => {
+    const jobId = workflow?.jobs[0].name;
     if (!jobId) return;
     setSubmitting(true);
     const nodes = getNodes();
@@ -107,18 +108,8 @@ export default function TopPanel({
       currNodeId = nodeConnectionGraph.get(currNodeId);
     }
 
-    const wfRequest = makeWorkflow(workflowName, jobId, nodes, edges);
-
-    const newWorkflow = await fetcher<Workflow>("/workflows", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(wfRequest),
-    });
-
-    if (newWorkflow.id) {
-      const runRequest: RunRequest = { workflow_id: newWorkflow.id };
+    if (workflow?.id) {
+      const runRequest: RunRequest = { workflow_id: workflow.id };
       const run = await fetcher<Run>("/runs", {
         method: "POST",
         headers: {
@@ -149,7 +140,7 @@ export default function TopPanel({
         </h1>
       </div>
       <Input
-      value={currentWorkflowName}         
+        value={currentWorkflowName}
         onChange={(e) => setCurrentWorkflowName(e.target.value)}
         onBlur={(e) => setWorkflowName(e.target.value)}
         onKeyDown={(e) => {
@@ -173,7 +164,7 @@ export default function TopPanel({
           <TooltipTrigger asChild>
             <Button
               onClick={onSubmit}
-              disabled={submitting}
+              disabled={submitting || !workflow}
               className="font-bold"
             >
               {submitting ? "Taking off..." : "Fly"}

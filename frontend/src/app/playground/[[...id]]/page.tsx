@@ -1,5 +1,11 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -28,28 +34,33 @@ import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
-import {
-  makeTriggerNode,
-} from "@/lib/workflowUtils";
+import { makeTriggerNode } from "@/lib/workflowUtils";
 import useLoadSave from "@/hooks/useLoadSave";
+import {
+  useWorkflowId,
+  WorkflowIdContextProvider,
+} from "@/hooks/useWorkflowId";
 
 const initialNodes: Node[] = [makeTriggerNode()];
 
 const initialEdges: Edge[] = [];
 
 export default function App({ params }: { params: { id?: string[] } }) {
+  const [workflowId, setWorkflowId] = useState(params.id?.at(0));
   return (
     <TooltipProvider delayDuration={0}>
-      <ReactFlowProvider>
-        <DragNDropProvider>
-          <Playground id={params.id?.at(0)} />
-        </DragNDropProvider>
-      </ReactFlowProvider>
+      <WorkflowIdContextProvider value={[workflowId, setWorkflowId]}>
+        <ReactFlowProvider>
+          <DragNDropProvider>
+            <Playground />
+          </DragNDropProvider>
+        </ReactFlowProvider>
+      </WorkflowIdContextProvider>
     </TooltipProvider>
   );
 }
 
-function Playground({ id }: { id?: string }) {
+function Playground() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectStartPos, setSelectStartPos] = useState<{
@@ -58,10 +69,10 @@ function Playground({ id }: { id?: string }) {
   } | null>(null);
   const [droppedType] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
+  const [id] = useWorkflowId();
   const { workflow } = useWorkflow(id);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
   const { isSaving, lastSavedTimestamp } = useLoadSave(
-    id,
     workflowName,
     setWorkflowName,
     nodes,
@@ -137,7 +148,6 @@ function Playground({ id }: { id?: string }) {
   );
 
   return (
-    workflow &&
     stepDefinitions && (
       <div
         style={{ width: "100vw", height: "100vh" }}
@@ -149,7 +159,6 @@ function Playground({ id }: { id?: string }) {
         <TopPanel
           workflowName={workflowName}
           setWorkflowName={setWorkflowName}
-          jobId={workflow?.jobs[0].id}
           isSaving={isSaving}
           lastSavedTimestamp={lastSavedTimestamp}
         />
