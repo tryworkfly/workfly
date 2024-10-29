@@ -40,6 +40,7 @@ import {
   useWorkflowId,
   WorkflowIdContextProvider,
 } from "@/hooks/useWorkflowId";
+import LoadingOverlay from "./LoadingOverlay";
 
 const initialNodes: Node[] = [makeTriggerNode()];
 
@@ -146,44 +147,43 @@ function Playground() {
   );
 
   return (
-    stepDefinitions && (
-      <div
-        style={{ width: "100vw", height: "100vh" }}
-        className="flex flex-col bg-muted"
-        onDragOver={(e) => {
-          e.preventDefault();
-        }}
+    <div
+      style={{ width: "100vw", height: "100vh" }}
+      className="flex flex-col bg-muted"
+      onDragOver={(e) => {
+        e.preventDefault();
+      }}
+    >
+      {!stepDefinitions && <LoadingOverlay />}
+      <TopPanel
+        workflowName={workflowName}
+        setWorkflowName={setWorkflowName}
+        isSaving={isSaving}
+        lastSavedTimestamp={lastSavedTimestamp}
+      />
+      <ReactFlow
+        nodeTypes={nodeTypes}
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeDragStop={onNodeDrag}
+        onDrop={onDrop}
+        onSelectionStart={onSelectionStart}
+        // onSelectionChange={() => console.log("selecting")}
+        onSelectionEnd={onSelectionEnd}
+        proOptions={{ hideAttribution: true }}
+        panOnScroll
+        panOnDrag={[1, 2]}
+        selectionOnDrag
+        zoomOnDoubleClick={false}
+        selectionMode={SelectionMode.Partial}
       >
-        <TopPanel
-          workflowName={workflowName}
-          setWorkflowName={setWorkflowName}
-          isSaving={isSaving}
-          lastSavedTimestamp={lastSavedTimestamp}
-        />
-        <ReactFlow
-          nodeTypes={nodeTypes}
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeDragStop={onNodeDrag}
-          onDrop={onDrop}
-          onSelectionStart={onSelectionStart}
-          // onSelectionChange={() => console.log("selecting")}
-          onSelectionEnd={onSelectionEnd}
-          proOptions={{ hideAttribution: true }}
-          panOnScroll
-          panOnDrag={[1, 2]}
-          selectionOnDrag
-          zoomOnDoubleClick={false}
-          selectionMode={SelectionMode.Partial}
-        >
-          <Sidebar />
-          <Controls position="bottom-right" />
-          <Background color="#ccc" variant={BackgroundVariant.Cross} />
-        </ReactFlow>
-      </div>
-    )
+        <Sidebar />
+        <Controls position="bottom-right" />
+        <Background color="#ccc" variant={BackgroundVariant.Cross} />
+      </ReactFlow>
+    </div>
   );
 }
