@@ -11,8 +11,7 @@ import {
 import { generateId } from "@/lib/utils";
 import _ from "lodash";
 import useStepDefinitions from "./useSteps";
-import { useWorkflow } from "./useWorkflows";
-import { useRouter } from "next/navigation";
+import { useCurrentWorkflow } from "./useWorkflows";
 import { useWorkflowId } from "./useWorkflowId";
 
 function makeMutateWorkflow(method: "POST" | "PUT") {
@@ -53,7 +52,7 @@ function useLoadSave(
 ) {
   const { stepDefinitions } = useStepDefinitions();
   const [workflowId, setWorkflowId] = useWorkflowId();
-  const { workflow } = useWorkflow(workflowId);
+  const { workflow } = useCurrentWorkflow();
 
   const initialLoadedTimerRef = useRef(null);
   const [initialLoaded, setInitialLoaded] = useState(false);
@@ -69,8 +68,6 @@ function useLoadSave(
     null
   );
 
-  const router = useRouter();
-
   // When workflow changes convert it to nodes/edges
   useEffect(() => {
     // Currently don't support multiple jobs
@@ -80,17 +77,17 @@ function useLoadSave(
       const steps = workflow.jobs[0].steps;
       const stepEdges = workflow.jobs[0].step_edges;
 
-      if (!flowAndWorkflowDifferent(workflow, nodes, edges)) return;
-
-      setNodes([
-        makeTriggerNode(
-          workflow.trigger.id,
-          workflow.trigger.conditions[0].event,
-          workflow.trigger.position
-        ),
-        ...stepsToNodes(steps, stepDefinitions),
-      ]);
-      setEdges(stepEdges);
+      if (flowAndWorkflowDifferent(workflow, nodes, edges)) {
+        setNodes([
+          makeTriggerNode(
+            workflow.trigger.id,
+            workflow.trigger.conditions[0].event,
+            workflow.trigger.position
+          ),
+          ...stepsToNodes(steps, stepDefinitions),
+        ]);
+        setEdges(stepEdges);
+      }
 
       // this is horrible
       if (!initialLoadedTimerRef.current) {
@@ -109,6 +106,7 @@ function useLoadSave(
       clearTimeout(saveTimerRef.current);
       // @ts-expect-error using web settimeout not nodejs settimeout
       saveTimerRef.current = setTimeout(async () => {
+        console.log(`id: ${workflowId}; loaded: ${initialLoaded}`);
         if (workflowId && !(initialLoaded && workflow)) return;
         if (!workflowId && nodes.length == 1) return;
 

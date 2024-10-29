@@ -69,8 +69,6 @@ function Playground() {
   } | null>(null);
   const [droppedType] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
-  const [id] = useWorkflowId();
-  const { workflow } = useWorkflow(id);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
   const { isSaving, lastSavedTimestamp } = useLoadSave(
     workflowName,

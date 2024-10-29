@@ -11,8 +11,7 @@ import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
-import { useWorkflow } from "@/hooks/useWorkflows";
-import { useWorkflowId } from "@/hooks/useWorkflowId";
+import { useCurrentWorkflow } from "@/hooks/useWorkflows";
 
 export default function TopPanel({
   workflowName,
@@ -30,8 +29,7 @@ export default function TopPanel({
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
   );
-  const [workflowId] = useWorkflowId();
-  const { workflow } = useWorkflow(workflowId);
+  const { workflow } = useCurrentWorkflow();
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
   >();
