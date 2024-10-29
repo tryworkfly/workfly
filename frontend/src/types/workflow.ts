@@ -1,24 +1,42 @@
-type Workflow = {
+import { XYPosition } from "@xyflow/react";
+
+export type Edge = {
+  id: string;
+  source: string;
+  target: string;
+};
+
+export type Workflow = {
   id?: string;
   name: string;
   run_name?: string;
-  trigger: Trigger[];
+  trigger: Trigger;
   jobs: Job[];
-  job_edges: [string, string][]; // source to target
+  job_edges: Edge[];
 };
 
-type Trigger = {
+export type Trigger = {
+  id: string;
+  position: XYPosition;
+  conditions: TriggerCondition[];
+};
+
+export type TriggerCondition = {
   event: string; // push, pull_request, etc.
   config: Record<string, any>;
 };
 
-type Job = {
+export type Job = {
+  id: string;
   name: string;
   steps: Step[];
+  step_edges: Edge[];
 };
 
-type Step = {
+export type Step = {
+  id: string;
   name: string;
+  position: XYPosition;
   inputs: Record<string, any>;
   step_id: string;
 };

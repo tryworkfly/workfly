@@ -7,8 +7,12 @@ from ..model.workflow import Workflow, WorkflowCreate
 
 
 class WorkflowClient:
-    def __init__(self):
+    def __enter__(self):
         self._session = Session(engine)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._session.close()
 
     def create(self, workflow_create: WorkflowCreate) -> Workflow:
         workflow = Workflow.model_validate(workflow_create)

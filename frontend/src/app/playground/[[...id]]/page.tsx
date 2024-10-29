@@ -1,5 +1,11 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -19,40 +25,37 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
-import useSWR from "swr";
-import fetcher from "@/lib/fetcher";
 import type { ActionNode } from "@/components/nodes/ActionNode";
-import type { JobNode } from "@/components/nodes/JobNode";
 import nodeTypes from "./nodeTypes";
 import Sidebar from "@/components/Sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import TopPanel from "@/components/TopPanel";
-import { WorkflowAIResponse } from "../../types/ai";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
-import { toast } from "sonner";
 import useStepDefinitions from "@/hooks/useSteps";
+import { useWorkflow } from "@/hooks/useWorkflows";
+import { makeTriggerNode } from "@/lib/workflowUtils";
+import useLoadSave from "@/hooks/useLoadSave";
+import {
+  useWorkflowId,
+  WorkflowIdContextProvider,
+} from "@/hooks/useWorkflowId";
 
-const initialNodes: Node[] = [
-  {
-    id: "trigger",
-    type: "triggerNode",
-    position: { x: 500, y: 300 },
-    data: { trigger: "push" },
-    deletable: false,
-  },
-];
+const initialNodes: Node[] = [makeTriggerNode()];
 
 const initialEdges: Edge[] = [];
 
-export default function App() {
+export default function App({ params }: { params: { id?: string[] } }) {
+  const [workflowId, setWorkflowId] = useState(params.id?.at(0));
   return (
     <TooltipProvider delayDuration={0}>
-      <ReactFlowProvider>
-        <DragNDropProvider>
-          <Playground />
-        </DragNDropProvider>
-      </ReactFlowProvider>
+      <WorkflowIdContextProvider value={[workflowId, setWorkflowId]}>
+        <ReactFlowProvider>
+          <DragNDropProvider>
+            <Playground />
+          </DragNDropProvider>
+        </ReactFlowProvider>
+      </WorkflowIdContextProvider>
     </TooltipProvider>
   );
 }
@@ -64,15 +67,18 @@ function Playground() {
     x: number;
     y: number;
   } | null>(null);
-  const [droppedType, _] = useDragAndDrop();
+  const [droppedType] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
+  const [workflowName, setWorkflowName] = useState("My New Workflow");
+  const { isSaving, lastSavedTimestamp } = useLoadSave(
+    workflowName,
+    setWorkflowName,
+    nodes,
+    edges
+  );
 
-  const {
-    getIntersectingNodes,
-    getNode,
-    updateNodeData,
-    screenToFlowPosition,
-  } = useReactFlow();
+  const { getIntersectingNodes, updateNodeData, screenToFlowPosition } =
+    useReactFlow();
 
   const onConnect: OnConnect = useCallback(
     (params: Connection) => {
@@ -124,52 +130,60 @@ function Playground() {
 
   const onDrop = useCallback(
     (e: React.DragEvent) => {
+      console.log("drop!!!");
       if (stepDefinitions === undefined) return;
       const action = stepDefinitions.filter((a) => a.name === droppedType);
       if (action.length === 0) return;
-      const newNode = {
+      const newNode: ActionNode = {
         id: generateId(),
         type: "actionNode",
         position: screenToFlowPosition({ x: e.clientX, y: e.clientY }),
-        data: structuredClone(action[0]),
+        data: { definition: structuredClone(action[0]), inputs: {} },
       };
-      setNodes((nodes) => nodes.concat(newNode as ActionNode));
+      setNodes((nodes) => nodes.concat(newNode));
     },
     [setNodes, stepDefinitions, droppedType]
   );
 
   return (
-    <div
-      style={{ width: "100vw", height: "100vh" }}
-      className="flex flex-col bg-muted"
-      onDragOver={(e) => {
-        e.preventDefault();
-      }}
-    >
-      <TopPanel />
-      <ReactFlow
-        nodeTypes={nodeTypes}
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeDragStop={onNodeDrag}
-        onDrop={onDrop}
-        onSelectionStart={onSelectionStart}
-        onSelectionChange={() => console.log("selecting")}
-        onSelectionEnd={onSelectionEnd}
-        proOptions={{ hideAttribution: true }}
-        panOnScroll
-        panOnDrag={[1, 2]}
-        selectionOnDrag
-        zoomOnDoubleClick={false}
-        selectionMode={SelectionMode.Partial}
+    stepDefinitions && (
+      <div
+        style={{ width: "100vw", height: "100vh" }}
+        className="flex flex-col bg-muted"
+        onDragOver={(e) => {
+          e.preventDefault();
+        }}
       >
-        <Sidebar />
-        <Controls position="bottom-right" />
-        <Background color="#ccc" variant={BackgroundVariant.Cross} />
-      </ReactFlow>
-    </div>
+        <TopPanel
+          workflowName={workflowName}
+          setWorkflowName={setWorkflowName}
+          isSaving={isSaving}
+          lastSavedTimestamp={lastSavedTimestamp}
+        />
+        <ReactFlow
+          nodeTypes={nodeTypes}
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onNodeDragStop={onNodeDrag}
+          onDrop={onDrop}
+          onSelectionStart={onSelectionStart}
+          // onSelectionChange={() => console.log("selecting")}
+          onSelectionEnd={onSelectionEnd}
+          proOptions={{ hideAttribution: true }}
+          panOnScroll
+          panOnDrag={[1, 2]}
+          selectionOnDrag
+          zoomOnDoubleClick={false}
+          selectionMode={SelectionMode.Partial}
+        >
+          <Sidebar />
+          <Controls position="bottom-right" />
+          <Background color="#ccc" variant={BackgroundVariant.Cross} />
+        </ReactFlow>
+      </div>
+    )
   );
 }

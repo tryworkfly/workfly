@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 import uuid
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, SQLModel
@@ -14,9 +14,10 @@ from sqlmodel import Field, SQLModel
 class _WorkflowBase(SQLModel):
     name: str
     run_name: str | None = None
-    trigger: list[Trigger] = Field(sa_column=Column(JSON))
+    trigger: Trigger = Field(sa_column=Column(JSON))
     jobs: list[Job] = Field(sa_column=Column(JSON))
-    job_edges: list[list[str]] = Field(sa_column=Column(JSON))  # list of (source, edge)
+    job_edges: list[Edge] = Field(sa_column=Column(JSON))
+    """Edge sources/targets are the job names, not the IDs as that simplifies conversion"""
 
     class Config:
         arbitrary_types_allowed = True
@@ -25,20 +26,41 @@ class _WorkflowBase(SQLModel):
 ### Public Models
 
 
+class XYPosition(TypedDict):
+    x: float
+    y: float
+
+
+class Edge(TypedDict):
+    id: str
+    source: str
+    target: str
+
+
 class Step(TypedDict):
+    id: str
     name: str
+    position: XYPosition
     inputs: dict[str, Any]
     step_id: str  # corresponding to a certain Action in DB
 
 
 class Job(TypedDict):
+    id: str
     name: str
     steps: list[Step]
+    step_edges: list[Edge]
+
+
+class TriggerCondition(TypedDict):
+    event: str
+    config: dict
 
 
 class Trigger(TypedDict):
-    event: str
-    config: dict
+    id: str
+    position: XYPosition
+    conditions: list[TriggerCondition]
 
 
 class Workflow(_WorkflowBase, table=True):

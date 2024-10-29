@@ -26,6 +26,7 @@ function StepsTab() {
         stepDefinitions.map((step, index) => (
           <div
             className="w-full"
+            key={step.id}
             draggable
             onDragOver={(e) => {
               e.preventDefault();
@@ -35,7 +36,11 @@ function StepsTab() {
             }}
             onDragStart={(e) => setDroppedType(step.name)}
           >
-            <ActionCard key={index} data={step} compact />
+            <ActionCard
+              key={index}
+              data={{ definition: step, inputs: {} }}
+              compact
+            />
           </div>
         ))}
     </CardContent>
@@ -82,7 +87,7 @@ function ChatTab() {
               x: 300 + prevNode.position.x,
               y: prevNode.position.y,
             },
-            data: structuredClone(step),
+            data: { definition: structuredClone(step), inputs: {} },
           };
           newEdges.push({
             id: generateId(),

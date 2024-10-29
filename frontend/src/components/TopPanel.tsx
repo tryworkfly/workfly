@@ -1,9 +1,9 @@
 import fetcher from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { TriggerCardNode } from "./nodes/TriggerNode";
+import type { TriggerNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
 import Image from "next/image";
 import { Input } from "./ui/input";
@@ -11,16 +11,33 @@ import { Send } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
+import { useCurrentWorkflow } from "@/hooks/useWorkflows";
 
-export default function TopPanel() {
+export default function TopPanel({
+  workflowName,
+  setWorkflowName,
+  isSaving,
+  lastSavedTimestamp,
+}: {
+  workflowName: string;
+  setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
+  isSaving: boolean;
+  lastSavedTimestamp: Date | null;
+}) {
+  const [currentWorkflowName, setCurrentWorkflowName] = useState(workflowName);
   const [submitting, setSubmitting] = useState(false);
-  const [workflowName, setWorkflowName] = useState("My New Workflow");
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
   );
+  const { workflow } = useCurrentWorkflow();
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
-    ActionNode | TriggerCardNode
+    ActionNode | TriggerNode
   >();
+
+  // For some reason if we try to delay rendering until after workflowName has been set from the fetched workflow,
+  // react flow will eat all the nodes/edges. So we need this intermediate state thing because we need to set
+  // the value in the topbar, but we only want to trigger a save action on blur, not on change
+  useEffect(() => setCurrentWorkflowName(workflowName), [workflowName]);
 
   const setNodesError = (
     ids: string[],
@@ -36,6 +53,8 @@ export default function TopPanel() {
   };
 
   const onSubmit = async () => {
+    const jobId = workflow?.jobs[0].name;
+    if (!jobId) return;
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
@@ -57,24 +76,6 @@ export default function TopPanel() {
       return;
     }
 
-    const wfRequest: Workflow = {
-      name: workflowName,
-      run_name: workflowName,
-      trigger: [
-        {
-          event: (getNode("trigger") as TriggerCardNode).data.trigger,
-          config: {},
-        },
-      ],
-      jobs: [
-        {
-          name: "Main Job",
-          steps: [],
-        },
-      ],
-      job_edges: [],
-    };
-
     let currNodeId = nodeConnectionGraph.get("trigger");
     while (currNodeId !== undefined) {
       const node = getNode(currNodeId);
@@ -89,9 +90,9 @@ export default function TopPanel() {
         return;
       }
 
-      const data = node.data as StepDefinition;
-      const unfilledRequiredInput = data.inputs.find(
-        (v) => v.required && v.value === undefined
+      const data = node.data as ActionNode["data"];
+      const unfilledRequiredInput = data.definition.inputs.find(
+        (v) => v.required && data.inputs[v.name] === undefined
       );
       if (unfilledRequiredInput) {
         setNodesError(
@@ -102,28 +103,11 @@ export default function TopPanel() {
         setSubmitting(false);
         return;
       }
-
-      const newStep: Step = {
-        name: data.name,
-        step_id: data.id,
-        inputs: Object.fromEntries(
-          data.inputs.map((input) => [input.name, input.value])
-        ),
-      };
-      wfRequest.jobs[0].steps.push(newStep);
       currNodeId = nodeConnectionGraph.get(currNodeId);
     }
 
-    const newWorkflow = await fetcher<Workflow>("/workflows", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(wfRequest),
-    });
-
-    if (newWorkflow.id) {
-      const runRequest: RunRequest = { workflow_id: newWorkflow.id };
+    if (workflow?.id) {
+      const runRequest: RunRequest = { workflow_id: workflow.id };
       const run = await fetcher<Run>("/runs", {
         method: "POST",
         headers: {
@@ -154,8 +138,9 @@ export default function TopPanel() {
         </h1>
       </div>
       <Input
-        value={workflowName}
-        onChange={(e) => setWorkflowName(e.target.value)}
+        value={currentWorkflowName}
+        onChange={(e) => setCurrentWorkflowName(e.target.value)}
+        onBlur={(e) => setWorkflowName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget instanceof HTMLElement) {
             e.currentTarget.blur();
@@ -163,19 +148,30 @@ export default function TopPanel() {
         }}
         className="w-60 text-center border-none shadow-none font-semibold"
       />
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            onClick={onSubmit}
-            disabled={submitting}
-            className="font-bold"
-          >
-            {submitting ? "Taking off..." : "Fly"}
-            <Send className="w-4 h-4 ml-2" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Submit workflow!</TooltipContent>
-      </Tooltip>
+      <div className="relative">
+        <span className="flex justify-end items-center absolute -left-[25dvw] right-full h-full">
+          <p className="mr-4 text-xs text-muted-foreground text-right">
+            {isSaving
+              ? "Saving..."
+              : lastSavedTimestamp
+              ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
+              : ""}
+          </p>
+        </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={onSubmit}
+              disabled={submitting || !workflow}
+              className="font-bold"
+            >
+              {submitting ? "Taking off..." : "Fly"}
+              <Send className="w-4 h-4 ml-2" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Submit workflow!</TooltipContent>
+        </Tooltip>
+      </div>
       <GeneratedWorkflowDialog
         workflowName={workflowName}
         generatedWorkflow={generatedWorkflow}

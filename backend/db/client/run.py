@@ -7,8 +7,12 @@ from .database import engine
 
 
 class RunClient:
-    def __init__(self):
+    def __enter__(self):
         self._session = Session(engine)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._session.close()
 
     def upsert(self, run_create: RunCreate) -> Run:
         statement = select(Run).where(Run.workflow_id == run_create.workflow_id)

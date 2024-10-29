@@ -1,7 +1,7 @@
 from typing import Any, Iterator, NotRequired, TypedDict
 import yaml
 
-from db.model import Job, Step, Trigger, Workflow
+from db.model import Edge, Job, Step, Trigger, Workflow
 from db.client.step_definition import StepDefinitionClient
 
 StepActionYAML = TypedDict(
@@ -50,7 +50,7 @@ yaml.add_representer(str, str_presenter)
 class WorkflowToYAML:
     @staticmethod
     def to_yaml(workflow: Workflow):
-        triggers = WorkflowToYAML._triggers_to_yaml(workflow.trigger)
+        triggers = WorkflowToYAML._trigger_to_yaml(workflow.trigger)
         jobs, required_permissions = WorkflowToYAML._jobs_to_yaml(
             iter(workflow.jobs), workflow.job_edges
         )
@@ -72,8 +72,10 @@ class WorkflowToYAML:
         )
 
     @staticmethod
-    def _triggers_to_yaml(triggers: list[Trigger]):
-        return {trigger["event"]: trigger["config"] for trigger in triggers}
+    def _trigger_to_yaml(trigger: Trigger):
+        return {
+            trigger["event"]: trigger["config"] for trigger in trigger["conditions"]
+        }
 
     @staticmethod
     def _make_job_id(job_name: str):
@@ -94,19 +96,19 @@ class WorkflowToYAML:
 
     @staticmethod
     def _jobs_to_yaml(
-        jobs: Iterator[Job], job_edges: list[list[str]]
+        jobs: Iterator[Job], job_edges: list[Edge]
     ) -> tuple[dict[str, JobYAML], dict[str, set[str]]]:
         job = next(jobs, None)
         if not job:
             return {}, {}
 
         dependent_jobs: list[str] = []
-        for source, target in job_edges:
-            if target == job["name"]:
-                dependent_jobs.append(WorkflowToYAML._make_job_id(source))
+        for edge in job_edges:
+            if edge["target"] == job["name"]:
+                dependent_jobs.append(WorkflowToYAML._make_job_id(edge["source"]))
 
         steps_yaml, steps_required_permissions = WorkflowToYAML._steps_to_yaml(
-            job["steps"]
+            job["steps"], job["step_edges"]
         )
         jobs_yaml, required_permissions = WorkflowToYAML._jobs_to_yaml(jobs, job_edges)
 
@@ -144,36 +146,61 @@ class WorkflowToYAML:
 
     @staticmethod
     def _steps_to_yaml(
-        step_requests: list[Step],
+        steps: list[Step], step_edges: list[Edge]
     ) -> tuple[list[StepActionYAML], dict[str, set[str]]]:
         """
         Returns a tuple of YAMLified steps and required permissions for the steps.
         """
+
         steps_yaml = []
         required_permissions = dict[str, set[str]]()
-        for step_request in step_requests:
-            step = WorkflowToYAML._validate_step_request(step_request)
+
+        ordered_steps = WorkflowToYAML._get_ordered_steps(steps, step_edges)
+
+        for step in ordered_steps:
+            step_definition = WorkflowToYAML._validate_step_request(step)
 
             required_permissions = WorkflowToYAML._merge_required_permissions(
-                required_permissions, step.required_permissions
+                required_permissions, step_definition.required_permissions
             )
 
-            if step.id == "custom/code":
+            if step_definition.id == "custom/code":
                 step_yaml = {
-                    "name": step_request["name"],
-                    "run": step_request["inputs"]["code"],
+                    "name": step["name"],
+                    "run": step["inputs"]["code"],
                 }
             else:
                 step_yaml = {
-                    "name": step_request["name"],
-                    "uses": f"{step_request['step_id']}@{step.version}",
-                    **(
-                        {"with": step_request["inputs"]}
-                        if step_request["inputs"]
-                        else {}
-                    ),
+                    "name": step["name"],
+                    "uses": f"{step['step_id']}@{step_definition.version}",
+                    **({"with": step["inputs"]} if step["inputs"] else {}),
                 }
 
             steps_yaml.append(step_yaml)
 
         return steps_yaml, required_permissions
+
+    @staticmethod
+    def _get_ordered_steps(steps: list[Step], step_edges: list[Edge]):
+        """Works off assumption that steps are a linear list with 1..1 with each other"""
+        dag: dict[str, str] = {edge["source"]: edge["target"] for edge in step_edges}
+
+        def get_ordered_step_ids(start_step: str, path: list[str] = []) -> list[str]:
+            path = path + [start_step]
+            if start_step not in dag:
+                return path
+            return get_ordered_step_ids(dag[start_step], path)
+
+        first_step_id = None
+        for step_request in steps:
+            if not any(edge["target"] == step_request["id"] for edge in step_edges):
+                first_step_id = step_request["id"]
+                break
+
+        if first_step_id is None:
+            # ?????
+            raise Exception("No first step found??? How??")
+
+        linear_order = get_ordered_step_ids(first_step_id)
+        reordered_step_requests = [step for step in steps if step["id"] in linear_order]
+        return reordered_step_requests
