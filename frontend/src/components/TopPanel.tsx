@@ -146,18 +146,16 @@ export default function TopPanel({
             e.currentTarget.blur();
           }
         }}
-        className="w-60 text-center border-none shadow-none font-semibold"
+        className="absolute inset-x-0 mx-auto w-60 text-center border-none shadow-none font-semibold"
       />
-      <div className="relative">
-        <span className="flex justify-end items-center absolute -left-[25dvw] right-full h-full">
-          <p className="mr-4 text-xs text-muted-foreground text-right">
-            {isSaving
-              ? "Saving..."
-              : lastSavedTimestamp
-              ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
-              : ""}
-          </p>
-        </span>
+      <div className="flex items-center gap-4">
+        <p className="text-xs text-muted-foreground text-right">
+          {isSaving
+            ? "Saving..."
+            : lastSavedTimestamp
+            ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
+            : ""}
+        </p>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
