@@ -32,6 +32,8 @@ function flowAndWorkflowDifferent(
   nodes: Node[],
   edges: Edge[]
 ) {
+  // Compare everything about the workflows except id
+  // Because we don't include ID when we POST/PUT workflows to backend
   const newWorkflow = makeWorkflow(
     workflow.name,
     workflow.jobs[0].id,
@@ -54,8 +56,6 @@ function useLoadSave(
   const [workflowId, setWorkflowId] = useWorkflowId();
   const { workflow } = useCurrentWorkflow();
 
-  const initialLoadedTimerRef = useRef(null);
-  const [initialLoaded, setInitialLoaded] = useState(false);
   const { setNodes, setEdges } = useReactFlow();
 
   const saveTimerRef = useRef<number | undefined>(undefined);
@@ -88,15 +88,6 @@ function useLoadSave(
         ]);
         setEdges(stepEdges);
       }
-
-      // this is horrible
-      if (!initialLoadedTimerRef.current) {
-        // @ts-expect-error
-        initialLoadedTimerRef.current = setTimeout(
-          () => setInitialLoaded(true),
-          500
-        );
-      }
     }
   }, [workflow, stepDefinitions]);
 
@@ -106,13 +97,10 @@ function useLoadSave(
       clearTimeout(saveTimerRef.current);
       // @ts-expect-error using web settimeout not nodejs settimeout
       saveTimerRef.current = setTimeout(async () => {
-        console.log(`id: ${workflowId}; loaded: ${initialLoaded}`);
-        if (workflowId && !(initialLoaded && workflow)) return;
+        if (workflowId && !workflow) return;
         if (!workflowId && nodes.length == 1) return;
 
         if (workflow) {
-          // Compare everything about the workflows except id
-          // Because we don't include ID when we make workflows
           if (
             !flowAndWorkflowDifferent(workflow, nodes, edges) &&
             workflowName === workflow.name
