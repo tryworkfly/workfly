@@ -1,7 +1,7 @@
 import fetcher from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { TriggerNode } from "./nodes/TriggerNode";
 import logo from "@/assets/logo.png";
@@ -13,7 +13,6 @@ import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { Workflow } from "@/types/workflow";
 import { makeWorkflow } from "@/lib/workflowUtils";
-import useLoadSave from "@/hooks/useLoadSave";
 
 export default function TopPanel({
   workflowName,
@@ -28,6 +27,7 @@ export default function TopPanel({
   isSaving: boolean;
   lastSavedTimestamp: Date | null;
 }) {
+  const [currentWorkflowName, setCurrentWorkflowName] = useState(workflowName);
   const [submitting, setSubmitting] = useState(false);
   const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
     null
@@ -35,6 +35,11 @@ export default function TopPanel({
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
   >();
+
+  // For some reason if we try to delay rendering until after workflowName has been set from the fetched workflow,
+  // react flow will eat all the nodes/edges. So we need this intermediate state thing because we need to set
+  // the value in the topbar, but we only want to trigger a save action on blur, not on change
+  useEffect(() => setCurrentWorkflowName(workflowName), [workflowName]);
 
   const setNodesError = (
     ids: string[],
@@ -144,7 +149,8 @@ export default function TopPanel({
         </h1>
       </div>
       <Input
-        defaultValue={workflowName}
+      value={currentWorkflowName}         
+        onChange={(e) => setCurrentWorkflowName(e.target.value)}
         onBlur={(e) => setWorkflowName(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && e.currentTarget instanceof HTMLElement) {

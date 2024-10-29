@@ -30,8 +30,6 @@ import useStepDefinitions from "@/hooks/useSteps";
 import { useWorkflow } from "@/hooks/useWorkflows";
 import {
   makeTriggerNode,
-  makeWorkflow,
-  stepsToNodes,
 } from "@/lib/workflowUtils";
 import useLoadSave from "@/hooks/useLoadSave";
 
@@ -62,7 +60,7 @@ function Playground({ id }: { id?: string }) {
   const { stepDefinitions } = useStepDefinitions();
   const { workflow } = useWorkflow(id);
   const [workflowName, setWorkflowName] = useState("My New Workflow");
-  const { isSaving, lastSavedTimestamp, initialLoaded } = useLoadSave(
+  const { isSaving, lastSavedTimestamp } = useLoadSave(
     id,
     workflowName,
     setWorkflowName,

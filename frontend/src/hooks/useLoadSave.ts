@@ -24,6 +24,21 @@ async function updateWorkflow(key: string, { arg }: { arg: Workflow }) {
   });
 }
 
+function flowAndWorkflowDifferent(
+  workflow: Workflow,
+  nodes: Node[],
+  edges: Edge[]
+) {
+  const newWorkflow = makeWorkflow(
+    workflow.name,
+    workflow.jobs[0].id,
+    nodes,
+    edges
+  );
+  const { id: unused, ...oldWorkflow } = workflow;
+  return !_.isEqual(oldWorkflow, newWorkflow);
+}
+
 const INACTIVITY_SAVE_TIMEOUT = 200;
 
 function useLoadSave(
@@ -59,6 +74,8 @@ function useLoadSave(
       const steps = workflow.jobs[0].steps;
       const stepEdges = workflow.jobs[0].step_edges;
 
+      if (!flowAndWorkflowDifferent(workflow, nodes, edges)) return;
+
       setNodes([
         makeTriggerNode(
           workflow.trigger.id,
@@ -88,15 +105,11 @@ function useLoadSave(
       saveTimerRef.current = setTimeout(async () => {
         // Compare everything about the workflows except id
         // Because we don't include ID when we make workflows
-        const newWorkflow = makeWorkflow(
-          workflowName,
-          workflow.jobs[0].id,
-          nodes,
-          edges
-        );
-        const { id: unused, ...oldWorkflow } = workflow;
-        const workflowChanged = !_.isEqual(oldWorkflow, newWorkflow);
-        if (!workflowChanged) return;
+        if (
+          !flowAndWorkflowDifferent(workflow, nodes, edges) &&
+          workflowName === workflow.name
+        )
+          return;
 
         setSaving(true);
         await trigger(
@@ -105,7 +118,11 @@ function useLoadSave(
             workflow?.jobs[0].id ?? generateId(),
             nodes,
             edges
-          )
+          ),
+          {
+            populateCache: true,
+            revalidate: false,
+          }
         );
         setLastSavedTimestamp(new Date());
         // More aesthetic lol
@@ -117,7 +134,6 @@ function useLoadSave(
   return {
     isSaving: saving,
     lastSavedTimestamp,
-    initialLoaded,
   };
 }
 
