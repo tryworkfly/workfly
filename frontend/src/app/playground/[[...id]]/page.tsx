@@ -33,13 +33,9 @@ import TopPanel from "@/components/TopPanel";
 import { generateId } from "@/lib/utils";
 import { DragNDropProvider, useDragAndDrop } from "@/lib/DragNDropContext";
 import useStepDefinitions from "@/hooks/useSteps";
-import { useWorkflow } from "@/hooks/useWorkflows";
 import { makeTriggerNode } from "@/lib/workflowUtils";
 import useLoadSave from "@/hooks/useLoadSave";
-import {
-  useWorkflowId,
-  WorkflowIdContextProvider,
-} from "@/hooks/useWorkflowId";
+import { WorkflowIdContextProvider } from "@/hooks/useWorkflowId";
 import LoadingOverlay from "./LoadingOverlay";
 
 const initialNodes: Node[] = [makeTriggerNode()];

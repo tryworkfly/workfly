@@ -68,6 +68,23 @@ function useLoadSave(
     null
   );
 
+  useEffect(() => {
+    function beforeUnload(e: BeforeUnloadEvent) {
+      if (
+        saving ||
+        (workflow && flowAndWorkflowDifferent(workflow, nodes, edges))
+      ) {
+        e.preventDefault();
+        e.returnValue =
+          "Are you sure you want to leave without saving changes?";
+      }
+    }
+
+    window.addEventListener("beforeunload", beforeUnload);
+
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [saving, workflow, nodes, edges]);
+
   // When workflow changes convert it to nodes/edges
   useEffect(() => {
     // Currently don't support multiple jobs
