@@ -27,10 +27,10 @@ def create_app():
             },
         )
 
-    app.include_router(workflows.router)
-    app.include_router(step_definitions.router)
-    app.include_router(runs.router)
-    app.include_router(ai.router)
+    app.include_router(workflows.make_router())
+    app.include_router(step_definitions.make_router())
+    app.include_router(runs.make_router())
+    app.include_router(ai.make_router())
 
     return app
 
