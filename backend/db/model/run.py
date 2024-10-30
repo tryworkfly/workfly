@@ -1,9 +1,17 @@
+import enum
+from sqlalchemy import Column, Enum
 from sqlmodel import Field, SQLModel
 import uuid
 
 
+class RunState(enum.Enum):
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+
+
 class _RunBase(SQLModel):
-    state: str  # RUNNING, SUCCESS, FAILED
+    state: RunState = Field(sa_column=Column(Enum(RunState)))
     result: str | None = None
     workflow_id: uuid.UUID = Field(foreign_key="workflow.id", unique=True)
 

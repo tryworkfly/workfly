@@ -2,9 +2,9 @@ import uuid
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from tasks.tasks import convert_workflow
 from db.client import RunClient, WorkflowClient
-from db.model import RunCreate, RunPublic, Workflow
-from workflow.workflow_to_yaml import WorkflowToYAML
+from db.model import RunCreate, RunPublic, RunState
 
 
 class RunRequest(BaseModel):
@@ -23,6 +23,15 @@ async def get_run(run_id: uuid.UUID) -> RunPublic:
     return run
 
 
+@router.get("/")
+async def get_run_by_workflow(workflow_id: uuid.UUID):
+    with RunClient() as run_client:
+        run = run_client.get_by_workflow_id(workflow_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail="Run not found")
+    return run
+
+
 @router.post("/")
 async def start_run(run_request: RunRequest) -> RunPublic:
     with WorkflowClient() as workflow_client:
@@ -31,13 +40,10 @@ async def start_run(run_request: RunRequest) -> RunPublic:
             raise HTTPException(status_code=404, detail="Workflow does not exist")
 
     with RunClient() as run_client:
-        run = RunCreate(state="RUNNING", workflow_id=workflow.id)
-        run_client.upsert(run)
-
-        workflow_yaml = WorkflowToYAML.to_yaml(Workflow.model_validate(workflow))
-        finished_run = RunCreate(
-            state="SUCCESS", result=workflow_yaml, workflow_id=workflow.id
+        run = run_client.upsert(
+            RunCreate(state=RunState.RUNNING, workflow_id=workflow.id, result=None)
         )
-        run = run_client.upsert(finished_run)
+
+    convert_workflow.delay(workflow.id)
 
     return run
