@@ -3,12 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .routers import runs, step_definitions, workflows
-from ai.ai_client import AIClient
-from workflow.workflow_request import (
-    WorkflowAIResponse,
-    WorkflowAIRequest,
-)
+from .routers import ai, runs, step_definitions, workflows
 
 
 def create_app():
@@ -32,18 +27,10 @@ def create_app():
             },
         )
 
-    @app.post("/ai")
-    async def create_ai_workflow(workflow: WorkflowAIRequest) -> WorkflowAIResponse:
-        ai_client = AIClient()
-        actions = ai_client.generate_workflow_actions(workflow.prompt)
-
-        return WorkflowAIResponse(
-            actions=actions,
-        )
-
     app.include_router(workflows.router)
     app.include_router(step_definitions.router)
     app.include_router(runs.router)
+    app.include_router(ai.router)
 
     return app
 
