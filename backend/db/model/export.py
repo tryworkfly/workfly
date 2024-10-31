@@ -4,28 +4,28 @@ from sqlmodel import Field, SQLModel
 import uuid
 
 
-class RunState(enum.Enum):
+class ExportState(enum.Enum):
     RUNNING = "RUNNING"
     SUCCEEDED = "SUCCEEDED"
     FAILED = "FAILED"
 
 
-class _RunBase(SQLModel):
-    state: RunState = Field(sa_column=Column(Enum(RunState)))
+class _ExportBase(SQLModel):
+    state: ExportState = Field(sa_column=Column(Enum(ExportState)))
     result: str | None = None
-    workflow_id: uuid.UUID = Field(foreign_key="workflow.id", unique=True)
+    workflow_id: uuid.UUID = Field(foreign_key="workflow.id")
 
 
 ### Public Models
 
 
-class Run(_RunBase, table=True):
+class Export(_ExportBase, table=True):
     id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
 
 
-class RunCreate(_RunBase):
+class ExportCreate(_ExportBase):
     pass
 
 
-class RunPublic(_RunBase):
+class ExportPublic(_ExportBase):
     id: uuid.UUID

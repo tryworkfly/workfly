@@ -21,16 +21,6 @@ class WorkflowClient:
         self._session.refresh(workflow)
         return WorkflowPublic.model_validate(workflow)
 
-    def get_all(self) -> Iterable[Workflow]:
-        statement = select(Workflow)
-        workflows = self._session.exec(statement)
-        return workflows
-
-    def get(self, workflow_id: uuid.UUID) -> WorkflowPublic | None:
-        statement = select(Workflow).where(Workflow.id == workflow_id)
-        workflow = self._session.exec(statement).first()
-        return WorkflowPublic.model_validate(workflow) if workflow is not None else None
-
     def put(
         self, workflow_id: uuid.UUID, workflow_update: WorkflowCreate
     ) -> WorkflowPublic:
@@ -45,3 +35,13 @@ class WorkflowClient:
         self._session.refresh(workflow)
 
         return WorkflowPublic.model_validate(workflow)
+
+    def get_all(self) -> Iterable[Workflow]:
+        statement = select(Workflow)
+        workflows = self._session.exec(statement)
+        return workflows
+
+    def get(self, workflow_id: uuid.UUID) -> WorkflowPublic | None:
+        statement = select(Workflow).where(Workflow.id == workflow_id)
+        workflow = self._session.exec(statement).first()
+        return WorkflowPublic.model_validate(workflow) if workflow is not None else None

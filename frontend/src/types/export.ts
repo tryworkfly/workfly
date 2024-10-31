@@ -1,10 +1,10 @@
-type Run = {
+type Export = {
   id?: string;
   state: string;
   result?: string;
   workflow_id: string;
 };
 
-type RunRequest = {
+type ExportRequest = {
   workflow_id: string;
 };

@@ -107,21 +107,21 @@ export default function TopPanel({
     }
 
     if (workflow?.id) {
-      const runRequest: RunRequest = { workflow_id: workflow.id };
-      const run = await fetcher<Run>("/runs", {
+      const exportRequest: ExportRequest = { workflow_id: workflow.id };
+      const workflowExport = await fetcher<Export>("/exports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(runRequest),
+        body: JSON.stringify(exportRequest),
       });
 
-      if (run.state === "SUCCESS" && run.result) {
-        const yaml = run.result;
+      if (workflowExport.state === "SUCCEEDED" && workflowExport.result) {
+        const yaml = workflowExport.result;
         setGeneratedWorkflow(yaml);
       } else {
         toast("Error processing workflow", {
-          description: "Please try again.",
+          description: workflowExport.result,
         });
       }
     }
