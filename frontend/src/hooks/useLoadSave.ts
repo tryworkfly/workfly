@@ -136,7 +136,7 @@ function useLoadSave(
             revalidate: false,
           }
         );
-        setSaveMessage(new Date().toLocaleString());
+        setSaveMessage(`Last saved at ${new Date().toLocaleString()}`);
         // More aesthetic lol
         setTimeout(() => setSaving(false), 100);
 
@@ -150,7 +150,9 @@ function useLoadSave(
 
   return {
     isSaving: saving,
-    saveMessage: error ? "Error occurred. Your changes have not been saved." : saveMessage,
+    saveMessage: error
+      ? "Error occurred. Your changes have not been saved."
+      : saveMessage,
   };
 }
 
