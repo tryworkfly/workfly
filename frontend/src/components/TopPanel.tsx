@@ -1,4 +1,4 @@
-import fetcher from "@/lib/fetcher";
+import fetcher, { apiUrl } from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
 import { useEffect, useState } from "react";
@@ -12,24 +12,26 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { useCurrentWorkflow } from "@/hooks/useWorkflows";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useExport } from "@/hooks/useExports";
 
 export default function TopPanel({
   workflowName,
   setWorkflowName,
   isSaving,
-  lastSavedTimestamp,
+  saveMessage,
 }: {
   workflowName: string;
   setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
   isSaving: boolean;
-  lastSavedTimestamp: Date | null;
+  saveMessage: string | null;
 }) {
   const [currentWorkflowName, setCurrentWorkflowName] = useState(workflowName);
   const [submitting, setSubmitting] = useState(false);
-  const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
-    null
-  );
+  const [exportId, setExportId] = useState<string | undefined>(undefined);
   const { workflow } = useCurrentWorkflow();
+  const { workflowExport, mutate } = useExport(exportId);
+  const { lastJsonMessage, readyState, sendJsonMessage } = useWebSocket(apiUrl);
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
   >();
@@ -38,6 +40,30 @@ export default function TopPanel({
   // react flow will eat all the nodes/edges. So we need this intermediate state thing because we need to set
   // the value in the topbar, but we only want to trigger a save action on blur, not on change
   useEffect(() => setCurrentWorkflowName(workflowName), [workflowName]);
+
+  useEffect(() => {
+    if (workflowExport && workflowExport.state !== "RUNNING")
+      setSubmitting(false);
+  }, [workflowExport, setSubmitting]);
+
+  useEffect(() => {
+    if (typeof lastJsonMessage === "object" && lastJsonMessage) {
+      const message = lastJsonMessage as {
+        route: string;
+        payload: Record<string, any>;
+      };
+
+      switch (message.route) {
+        case "export_status_changed":
+          mutate();
+          break;
+        case "error":
+          toast.error("Something went wrong in backend connection", {
+            description: message.payload.message,
+          });
+      }
+    }
+  }, [lastJsonMessage]);
 
   const setNodesError = (
     ids: string[],
@@ -55,6 +81,7 @@ export default function TopPanel({
   const onSubmit = async () => {
     const jobId = workflow?.jobs[0].name;
     if (!jobId) return;
+    if (readyState !== ReadyState.OPEN) return;
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
@@ -107,26 +134,22 @@ export default function TopPanel({
     }
 
     if (workflow?.id) {
-      const runRequest: RunRequest = { workflow_id: workflow.id };
-      const run = await fetcher<Run>("/runs", {
+      const exportRequest: ExportRequest = { workflow_id: workflow.id };
+      const workflowExport = await fetcher<Export>("/exports", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(runRequest),
+        body: JSON.stringify(exportRequest),
       });
-
-      if (run.state === "SUCCESS" && run.result) {
-        const yaml = run.result;
-        setGeneratedWorkflow(yaml);
-      } else {
-        toast("Error processing workflow", {
-          description: "Please try again.",
-        });
-      }
+      setExportId(workflowExport.id);
+      sendJsonMessage({
+        route: "export",
+        payload: {
+          export_id: workflowExport.id,
+        },
+      });
     }
-
-    setSubmitting(false);
   };
 
   return (
@@ -150,11 +173,7 @@ export default function TopPanel({
       />
       <div className="flex items-center gap-4">
         <p className="text-xs text-muted-foreground text-right">
-          {isSaving
-            ? "Saving..."
-            : lastSavedTimestamp
-            ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
-            : ""}
+          {isSaving ? "Saving..." : saveMessage ?? ""}
         </p>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -172,8 +191,8 @@ export default function TopPanel({
       </div>
       <GeneratedWorkflowDialog
         workflowName={workflowName}
-        generatedWorkflow={generatedWorkflow}
-        setGeneratedWorkflow={setGeneratedWorkflow}
+        exportId={exportId}
+        setExportId={setExportId}
       />
     </div>
   );

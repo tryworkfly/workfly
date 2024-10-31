@@ -1,6 +1,11 @@
 name: workfly
 
 services:
+  rabbitmq:
+    image: rabbitmq:4
+    ports:
+      - "5672:5672"
+    hostname: rabbitmq
   backend:
     build:
       context: ./backend
@@ -13,7 +18,24 @@ services:
         - path: ./backend
           action: sync+restart
           target: /home/docker/code
-
+    volumes:
+      - ./backend/database.db:/home/docker/code/database.db
+  celery_worker:
+    build:
+      context: ./backend
+    command: celery -A tasks worker --loglevel=INFO
+    env_file:
+      - ./backend/.env
+    develop:
+      watch:
+        - path: ./backend/tasks
+          action: sync+restart
+          target: /home/docker/code/tasks
+    volumes:
+      - ./backend/database.db:/home/docker/code/database.db
+    depends_on:
+      - backend
+      - rabbitmq
   frontend:
     build:
       context: ./frontend
