@@ -3,7 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .routers import ai, exports, step_definitions, workflows
+from .routers import ai, exports, step_definitions, websocket, workflows
 
 
 def create_app():
@@ -31,6 +31,7 @@ def create_app():
     app.include_router(step_definitions.make_router())
     app.include_router(exports.make_router())
     app.include_router(ai.make_router())
+    app.include_router(websocket.make_router())
 
     return app
 

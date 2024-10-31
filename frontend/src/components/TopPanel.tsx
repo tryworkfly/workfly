@@ -1,4 +1,4 @@
-import fetcher from "@/lib/fetcher";
+import fetcher, { apiUrl } from "@/lib/fetcher";
 import { Button } from "./ui/button";
 import { useReactFlow } from "@xyflow/react";
 import { useEffect, useState } from "react";
@@ -12,6 +12,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import GeneratedWorkflowDialog from "./GeneratedWorkflowDialog";
 import { ActionNode } from "./nodes/ActionNode";
 import { useCurrentWorkflow } from "@/hooks/useWorkflows";
+import useWebSocket, { ReadyState } from "react-use-websocket";
+import { useExport } from "@/hooks/useExports";
 
 export default function TopPanel({
   workflowName,
@@ -28,6 +30,8 @@ export default function TopPanel({
   const [submitting, setSubmitting] = useState(false);
   const [exportId, setExportId] = useState<string | undefined>(undefined);
   const { workflow } = useCurrentWorkflow();
+  const { workflowExport, mutate } = useExport(exportId);
+  const { lastJsonMessage, readyState, sendJsonMessage } = useWebSocket(apiUrl);
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
   >();
@@ -36,6 +40,30 @@ export default function TopPanel({
   // react flow will eat all the nodes/edges. So we need this intermediate state thing because we need to set
   // the value in the topbar, but we only want to trigger a save action on blur, not on change
   useEffect(() => setCurrentWorkflowName(workflowName), [workflowName]);
+
+  useEffect(() => {
+    if (workflowExport && workflowExport.state !== "RUNNING")
+      setSubmitting(false);
+  }, [workflowExport, setSubmitting]);
+
+  useEffect(() => {
+    if (typeof lastJsonMessage === "object" && lastJsonMessage) {
+      const message = lastJsonMessage as {
+        route: string;
+        payload: Record<string, any>;
+      };
+
+      switch (message.route) {
+        case "export_status_changed":
+          mutate();
+          break;
+        case "error":
+          toast.error("Something went wrong in backend connection", {
+            description: message.payload.message,
+          });
+      }
+    }
+  }, [lastJsonMessage]);
 
   const setNodesError = (
     ids: string[],
@@ -53,6 +81,7 @@ export default function TopPanel({
   const onSubmit = async () => {
     const jobId = workflow?.jobs[0].name;
     if (!jobId) return;
+    if (readyState !== ReadyState.OPEN) return;
     setSubmitting(true);
     const nodes = getNodes();
     const edges = getEdges();
@@ -114,9 +143,13 @@ export default function TopPanel({
         body: JSON.stringify(exportRequest),
       });
       setExportId(workflowExport.id);
+      sendJsonMessage({
+        route: "export",
+        payload: {
+          export_id: workflowExport.id,
+        },
+      });
     }
-
-    setSubmitting(false);
   };
 
   return (
