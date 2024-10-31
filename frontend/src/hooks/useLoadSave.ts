@@ -54,7 +54,7 @@ function useLoadSave(
 ) {
   const { stepDefinitions } = useStepDefinitions();
   const [workflowId, setWorkflowId] = useWorkflowId();
-  const { workflow } = useCurrentWorkflow();
+  const { workflow, error } = useCurrentWorkflow();
 
   const { setNodes, setEdges } = useReactFlow();
 
@@ -64,9 +64,7 @@ function useLoadSave(
     makeMutateWorkflow(workflowId ? "PUT" : "POST")
   );
   const [saving, setSaving] = useState(false);
-  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<Date | null>(
-    null
-  );
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     function beforeUnload(e: BeforeUnloadEvent) {
@@ -138,7 +136,7 @@ function useLoadSave(
             revalidate: false,
           }
         );
-        setLastSavedTimestamp(new Date());
+        setSaveMessage(new Date().toLocaleString());
         // More aesthetic lol
         setTimeout(() => setSaving(false), 100);
 
@@ -152,7 +150,7 @@ function useLoadSave(
 
   return {
     isSaving: saving,
-    lastSavedTimestamp,
+    saveMessage: error ? "Error occurred. Your changes have not been saved." : saveMessage,
   };
 }
 

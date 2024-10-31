@@ -19,12 +19,12 @@ export default function TopPanel({
   workflowName,
   setWorkflowName,
   isSaving,
-  lastSavedTimestamp,
+  saveMessage,
 }: {
   workflowName: string;
   setWorkflowName: React.Dispatch<React.SetStateAction<string>>;
   isSaving: boolean;
-  lastSavedTimestamp: Date | null;
+  saveMessage: string | null;
 }) {
   const [currentWorkflowName, setCurrentWorkflowName] = useState(workflowName);
   const [submitting, setSubmitting] = useState(false);
@@ -173,11 +173,7 @@ export default function TopPanel({
       />
       <div className="flex items-center gap-4">
         <p className="text-xs text-muted-foreground text-right">
-          {isSaving
-            ? "Saving..."
-            : lastSavedTimestamp
-            ? `Last saved at ${lastSavedTimestamp.toLocaleString()}`
-            : ""}
+          {isSaving ? "Saving..." : saveMessage ?? ""}
         </p>
         <Tooltip>
           <TooltipTrigger asChild>

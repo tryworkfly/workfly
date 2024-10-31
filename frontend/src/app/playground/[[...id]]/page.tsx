@@ -67,7 +67,7 @@ function Playground() {
   const [droppedType] = useDragAndDrop();
   const { stepDefinitions } = useStepDefinitions();
   const [workflowName, setWorkflowName] = useState("My New Workflow");
-  const { isSaving, lastSavedTimestamp } = useLoadSave(
+  const { isSaving, saveMessage } = useLoadSave(
     workflowName,
     setWorkflowName,
     nodes,
@@ -155,7 +155,7 @@ function Playground() {
         workflowName={workflowName}
         setWorkflowName={setWorkflowName}
         isSaving={isSaving}
-        lastSavedTimestamp={lastSavedTimestamp}
+        saveMessage={saveMessage}
       />
       <ReactFlow
         nodeTypes={nodeTypes}
