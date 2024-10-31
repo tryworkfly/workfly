@@ -1,6 +1,8 @@
+type ExportState = "RUNNING" | "SUCCEEDED" | "FAILED";
+
 type Export = {
   id?: string;
-  state: string;
+  state: ExportState;
   result?: string;
   workflow_id: string;
 };

@@ -26,9 +26,7 @@ export default function TopPanel({
 }) {
   const [currentWorkflowName, setCurrentWorkflowName] = useState(workflowName);
   const [submitting, setSubmitting] = useState(false);
-  const [generatedWorkflow, setGeneratedWorkflow] = useState<string | null>(
-    null
-  );
+  const [exportId, setExportId] = useState<string | undefined>(undefined);
   const { workflow } = useCurrentWorkflow();
   const { getNodes, getEdges, getNode, updateNodeData } = useReactFlow<
     ActionNode | TriggerNode
@@ -115,15 +113,7 @@ export default function TopPanel({
         },
         body: JSON.stringify(exportRequest),
       });
-
-      if (workflowExport.state === "SUCCEEDED" && workflowExport.result) {
-        const yaml = workflowExport.result;
-        setGeneratedWorkflow(yaml);
-      } else {
-        toast("Error processing workflow", {
-          description: workflowExport.result,
-        });
-      }
+      setExportId(workflowExport.id);
     }
 
     setSubmitting(false);
@@ -172,8 +162,8 @@ export default function TopPanel({
       </div>
       <GeneratedWorkflowDialog
         workflowName={workflowName}
-        generatedWorkflow={generatedWorkflow}
-        setGeneratedWorkflow={setGeneratedWorkflow}
+        exportId={exportId}
+        setExportId={setExportId}
       />
     </div>
   );
