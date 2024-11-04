@@ -140,7 +140,7 @@ export default function Sidebar() {
 
   const tabs = [
     {
-      name: "Steps",
+      name: "Add new step",
       icon: Plus,
       tooltip: "Add new step",
       content: <StepsTab />,
