@@ -1,41 +1,9 @@
-from typing import Any, Iterator, NotRequired, TypedDict
+from typing import Iterator
 import yaml
 
+from .github_yaml import JobYAML, StepActionYAML, WorkflowYAML
 from db.model import Edge, Job, Step, Trigger, Workflow
 from db.client.step_definition import StepDefinitionClient
-
-StepActionYAML = TypedDict(
-    "StepActionYAML",
-    {
-        "name": str,
-        "uses": NotRequired[str],
-        "with": NotRequired[dict[str, Any]],
-        "run": NotRequired[str],
-    },
-)
-
-
-JobYAML = TypedDict(
-    "JobYAML",
-    {
-        "name": str,
-        "runs-on": list[str],
-        "needs": list[str],
-        "steps": list[StepActionYAML],
-    },
-)
-
-
-WorkflowYAML = TypedDict(
-    "WorkflowYAML",
-    {
-        "name": str,
-        "run-name": NotRequired[str],
-        "permissions": dict[str, str],
-        "on": dict[str, dict[str, Any]],
-        "jobs": dict[str, JobYAML],
-    },
-)
 
 
 def str_presenter(dumper, data: str):
@@ -133,16 +101,16 @@ class WorkflowToYAML:
     @staticmethod
     def _validate_step_request(step_request: Step):
         step_db = StepDefinitionClient()
-        step = step_db.get(step_request["step_id"])
+        StepExporter = step_db.get_exporter(step_request["step_id"])
 
-        if not step:
+        if not StepExporter:
             raise ValueError(f"Step {step_request["step_id"]} not found")
-        for input in step.inputs:
+        for input in StepExporter.get_definition().inputs:
             if input.required and (
                 not step_request["inputs"] or input.name not in step_request["inputs"]
             ):
                 raise ValueError(f"Input {input.name} not found")
-        return step
+        return StepExporter
 
     @staticmethod
     def _steps_to_yaml(
@@ -158,25 +126,13 @@ class WorkflowToYAML:
         ordered_steps = WorkflowToYAML._get_ordered_steps(steps, step_edges)
 
         for step in ordered_steps:
-            step_definition = WorkflowToYAML._validate_step_request(step)
+            StepExporter = WorkflowToYAML._validate_step_request(step)
 
             required_permissions = WorkflowToYAML._merge_required_permissions(
-                required_permissions, step_definition.required_permissions
+                required_permissions, StepExporter.get_definition().required_permissions
             )
 
-            if step_definition.id == "custom/code":
-                step_yaml = {
-                    "name": step["name"],
-                    "run": step["inputs"]["code"],
-                }
-            else:
-                step_yaml = {
-                    "name": step["name"],
-                    "uses": f"{step['step_id']}@{step_definition.version}",
-                    **({"with": step["inputs"]} if step["inputs"] else {}),
-                }
-
-            steps_yaml.append(step_yaml)
+            steps_yaml.append(StepExporter().to_github_yaml(step))
 
         return steps_yaml, required_permissions
 

@@ -1,19 +1,12 @@
 from typing import Iterable
 import uuid
 from fastapi import HTTPException
-from sqlmodel import Session, select
-from .database import engine
+from sqlmodel import select
+from .database import DatabaseClient
 from ..model.workflow import Workflow, WorkflowCreate, WorkflowPublic
 
 
-class WorkflowClient:
-    def __enter__(self):
-        self._session = Session(engine)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._session.close()
-
+class WorkflowClient(DatabaseClient[Workflow, WorkflowCreate, WorkflowPublic]):
     def create(self, workflow_create: WorkflowCreate) -> WorkflowPublic:
         workflow = Workflow.model_validate(workflow_create)
         self._session.add(workflow)

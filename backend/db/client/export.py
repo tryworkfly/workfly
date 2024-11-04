@@ -1,20 +1,13 @@
 from fastapi import HTTPException
-from sqlmodel import Session, select
+from sqlmodel import select
 from typing import Iterable
 import uuid
 
 from ..model.export import Export, ExportCreate, ExportPublic
-from .database import engine
+from .database import DatabaseClient
 
 
-class ExportClient:
-    def __enter__(self):
-        self._session = Session(engine)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._session.close()
-
+class ExportClient(DatabaseClient[Export, ExportCreate, ExportPublic]):
     def create(self, workflow_create: ExportCreate) -> ExportPublic:
         export = Export.model_validate(workflow_create)
         self._session.add(export)
